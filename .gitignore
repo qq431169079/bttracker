@@ -1,0 +1,12 @@
+*.log
+*.scan
+Makefile*
+aclocal.*
+autom4te.*
+config.*
+compile
+configure
+depcomp
+install-sh
+missing
+stamp-h1
