@@ -39,7 +39,7 @@ If you have successfully compiled the code, you can now run the program:
 
 ````bash
 
-src/bttracker
+$ src/bttracker
 ````
 
 At this point, the program will wait for UDP datagrams on port `1234`.
