@@ -28,57 +28,20 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BTTRACKER_ALLHEADS_H_
-#define BTTRACKER_ALLHEADS_H_
+int64_t bt_random_int64(void) {
+  int64_t ran = 0;
+  static bool initialized = false;
 
-#include <stdio.h>
-#include <sys/time.h>
+  /* First call initializes the seed. */
+  if (!initialized) {
+    srand((unsigned) time(NULL));
+    initialized = true;
+  }
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+  /* Assume rand() has at least 12 bits of precision. */
+  for (int i = 0; i < sizeof(ran); i++) {
+    ((char *) &ran)[i] = (char)((rand() & 0x0FF0) >> 4);
+  }
 
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
-
-#ifdef STDC_HEADERS
-#include <stdlib.h>
-#endif
-
-#ifdef HAVE_STDBOOL_H
-#include <stdbool.h>
-#endif
-
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#include <sys/types.h>
-#endif
-
-#ifdef HAVE_SYSLOG_H
-#include <syslog.h>
-#endif
-
-#ifdef HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
-
-#ifdef HAVE_ARPA_INET_H
-#include <arpa/inet.h>
-#endif
-
-#ifdef HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif
-
-#ifdef HAVE_PTHREAD
-#include <pthread.h>
-#endif
-
-#include <glib.h>
-
-/* Application headers. */
-#include "byteorder.h"
-#include "random.h"
-
-#endif // BTTRACKER_ALLHEADS_H_
+  return ran;
+}
