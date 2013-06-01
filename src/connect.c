@@ -89,7 +89,7 @@ bool bt_valid_request(bt_connection_table_t *table, const bt_req_t *req) {
 }
 
 void *bt_handle_connection(const bt_connection_data_t *in) {
-  bt_concurrent_connection_table_t *table = in->table;
+  const bt_concurrent_connection_table_t *table = in->table;
 
   syslog(LOG_DEBUG, "Handling incoming connection");
 
@@ -126,7 +126,7 @@ void *bt_handle_connection(const bt_connection_data_t *in) {
 }
 
 void *bt_clear_old_connections(void *data) {
-  bt_connection_purge_data_t *in = (bt_connection_purge_data_t *) data;
+  const bt_connection_purge_data_t *in = (bt_connection_purge_data_t *) data;
 
   while (true) {
     int steps = 0;
@@ -161,7 +161,7 @@ void bt_free_hash_table_key_val(gpointer data) {
 gboolean bt_hash_table_old_connection(gpointer key, gpointer val, gpointer data) {
 
   /* Keys and values are 64-bit integers. */
-  int64_t *now = (int64_t *) data, *added_at = (int64_t *) val;
+  const int64_t *now = (int64_t *) data, *added_at = (int64_t *) val;
 
   /* Check if this connection ID exceeded TTL. */
   bool should_expire = bt_expired(*added_at, *now, BT_ACTIVE_CONNECTION_TTL);
