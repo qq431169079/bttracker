@@ -28,56 +28,27 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BTTRACKER_ALLHEADS_H_
-#define BTTRACKER_ALLHEADS_H_
+#ifndef BTTRACKER_BYTEORDER_H_
+#define BTTRACKER_BYTEORDER_H_
 
-#include <stdio.h>
-#include <sys/time.h>
+/* Platform-based ntohll() and htonll() function definitions. */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#ifdef __APPLE__
+#ifndef HAVE_HTONLL
+#include <libkern/OSByteOrder.h>
+#define ntohll(n) OSSwapBigToHostInt64(n)
+#define htonll(n) OSSwapHostToBigInt64(n)
+#define HAVE_HTONLL
+#endif // HAVE_HTONLL
+#endif // __APPLE__
 
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
+#ifndef HAVE_HTONLL
+#ifdef __GLIBC__
+#define HAVE_HTONLL
+#include <byteswap.h>
+#define ntohll(a) bswap_64(a)
+#define htonll(a) bswap_64(a)
+#endif // __GLIBC__
+#endif // HAVE_HTONLL
 
-#ifdef STDC_HEADERS
-#include <stdlib.h>
-#endif
-
-#ifdef HAVE_STDBOOL_H
-#include <stdbool.h>
-#endif
-
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#include <sys/types.h>
-#endif
-
-#ifdef HAVE_SYSLOG_H
-#include <syslog.h>
-#endif
-
-#ifdef HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
-
-#ifdef HAVE_ARPA_INET_H
-#include <arpa/inet.h>
-#endif
-
-#ifdef HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif
-
-#ifdef HAVE_PTHREAD
-#include <pthread.h>
-#endif
-
-#include <glib.h>
-
-/* Application headers. */
-#include "byteorder.h"
-
-#endif // BTTRACKER_ALLHEADS_H_
+#endif // BTTRACKER_BYTEORDER_H_
