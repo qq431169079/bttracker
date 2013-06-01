@@ -12,7 +12,6 @@ requests; support for announces and scrapes are not yet implemented.
 This code is known to compile and run on the following platforms:
 
 * Linux
-* Mac OS X 10.8 (with [Homebrew](http://mxcl.github.io/homebrew/))
 
 ## Compiling
 
