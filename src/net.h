@@ -56,10 +56,10 @@
 
 /* Types of requests. */
 typedef enum {
-  BT_ACTION_CONNECT,  // 0
-  BT_ACTION_ANNOUNCE, // 1
-  BT_ACTION_SCRAPE,   // 2
-  BT_ACTION_ERROR     // 3
+  BT_ACTION_CONNECT  = 0,
+  BT_ACTION_ANNOUNCE = 1,
+  BT_ACTION_SCRAPE   = 2,
+  BT_ACTION_ERROR    = 3
 } bt_action;
 
 /* Object that contains fields common to all types of requests. */
