@@ -28,58 +28,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BTTRACKER_ALLHEADS_H_
-#define BTTRACKER_ALLHEADS_H_
+#ifndef BTTRACKER_TTL_H_
+#define BTTRACKER_TTL_H_
 
-#include <stdio.h>
-#include <sys/time.h>
+/* Returns the number of seconds since epoch. */
+int64_t bt_current_timestamp();
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+/* Returns whether the given timestamp, in seconds, exceeded the ttl. */
+bool bt_now_expired(int64_t ts_begin, int64_t ttl);
 
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
+/* Returns whether the difference between the two timestamps exceed the ttl. */
+bool bt_expired(int64_t ts_begin, int64_t ts_end, int64_t ttl);
 
-#ifdef STDC_HEADERS
-#include <stdlib.h>
-#endif
-
-#ifdef HAVE_STDBOOL_H
-#include <stdbool.h>
-#endif
-
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#include <sys/types.h>
-#endif
-
-#ifdef HAVE_SYSLOG_H
-#include <syslog.h>
-#endif
-
-#ifdef HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
-
-#ifdef HAVE_ARPA_INET_H
-#include <arpa/inet.h>
-#endif
-
-#ifdef HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif
-
-#ifdef HAVE_PTHREAD
-#include <pthread.h>
-#endif
-
-#include <glib.h>
-
-/* Application headers. */
-#include "byteorder.h"
-#include "random.h"
-#include "ttl.h"
-
-#endif // BTTRACKER_ALLHEADS_H_
+#endif // BTTRACKER_TTL_H
