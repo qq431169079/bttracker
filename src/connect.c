@@ -159,6 +159,7 @@ void bt_free_hash_table_key_val(gpointer data) {
 }
 
 gboolean bt_hash_table_old_connection(gpointer key, gpointer val, gpointer data) {
+
   /* Keys and values are 64-bit integers. */
   int64_t *now = (int64_t *) data, *added_at = (int64_t *) val;
 
