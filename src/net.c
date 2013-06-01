@@ -28,59 +28,25 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BTTRACKER_ALLHEADS_H_
-#define BTTRACKER_ALLHEADS_H_
+struct sockaddr_in bt_local_addr(unsigned short port) {
+  return (struct sockaddr_in) {
+      .sin_family = AF_INET,
+      .sin_port = htons(port),
+      .sin_addr.s_addr = htonl(INADDR_ANY) };
+}
 
-#include <stdio.h>
-#include <sys/time.h>
+void bt_req_from_network(bt_req_t *req) {
+  req->connection_id = ntohll(req->connection_id);
+  req->action = ntohl(req->action);
+  req->transaction_id = ntohl(req->transaction_id);
+}
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+void bt_resp_to_network(bt_resp_t *resp) {
+  resp->action = ntohl(resp->action);
+  resp->transaction_id = ntohl(resp->transaction_id);
+}
 
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
-
-#ifdef STDC_HEADERS
-#include <stdlib.h>
-#endif
-
-#ifdef HAVE_STDBOOL_H
-#include <stdbool.h>
-#endif
-
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#include <sys/types.h>
-#endif
-
-#ifdef HAVE_SYSLOG_H
-#include <syslog.h>
-#endif
-
-#ifdef HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
-
-#ifdef HAVE_ARPA_INET_H
-#include <arpa/inet.h>
-#endif
-
-#ifdef HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif
-
-#ifdef HAVE_PTHREAD
-#include <pthread.h>
-#endif
-
-#include <glib.h>
-
-/* Application headers. */
-#include "byteorder.h"
-#include "random.h"
-#include "net.h"
-#include "ttl.h"
-
-#endif // BTTRACKER_ALLHEADS_H_
+void bt_conn_resp_to_network(bt_connection_resp_t *resp) {
+  bt_resp_to_network((bt_resp_t *) resp);
+  resp->connection_id = ntohll(resp->connection_id);
+}

@@ -2,4 +2,4 @@ AM_CFLAGS = -g -Wall -O3 $(PTHREAD_CFLAGS) $(GLIB_CFLAGS) -include allheads.h
 LIBS = $(PTHREAD_LIBS) $(GLIB_LIBS)
 
 bin_PROGRAMS = bttracker
-bttracker_SOURCES = random.c ttl.c bttracker.c
+bttracker_SOURCES = random.c ttl.c net.c bttracker.c
