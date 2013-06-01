@@ -82,5 +82,6 @@
 #include "random.h"
 #include "net.h"
 #include "ttl.h"
+#include "connect.h"
 
 #endif // BTTRACKER_ALLHEADS_H_
