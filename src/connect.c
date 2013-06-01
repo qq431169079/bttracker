@@ -88,7 +88,7 @@ bool bt_valid_request(bt_connection_table_t *table, const bt_req_t *req) {
   return false;
 }
 
-void *bt_handle_connection(bt_connection_data_t *in) {
+void *bt_handle_connection(const bt_connection_data_t *in) {
   bt_concurrent_connection_table_t *table = in->table;
 
   syslog(LOG_DEBUG, "Handling incoming connection");
