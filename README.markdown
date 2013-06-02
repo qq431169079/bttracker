@@ -2,22 +2,25 @@
 
 BtTracker is a BitTorrent UDP-based tracker written in C for learning purposes.
 
-## What's Working
-
-At this point, the tracker is only capable of receiving incoming connection
-requests; support for announces and scrapes are not yet implemented.
-
 ## Supported Platforms
 
 This code is known to compile and run on the following platforms:
 
 * Linux
 
-## Compiling
+### Current Status
 
-First, make sure you have GCC (or a C99-compatible compiler),
-[Automake](http://www.gnu.org/software/automake/), and
-[Autoconf](http://www.gnu.org/software/autoconf/‎).
+At this point, BtTracker is only capable of receiving incoming connection
+requests; support for announces and scrapes are not yet implemented.
+
+## Building
+
+First, make sure to install the following software:
+
+* GCC, or a C-99 compiler
+* [GLib](https://developer.gnome.org/glib/) 2.36.0+
+* [Automake](http://www.gnu.org/software/automake/)
+* [Autoconf](http://www.gnu.org/software/autoconf/‎)
 
 Assuming that you've already cloned the repository, open a terminal and run the
 following commands in its root directory:
@@ -78,5 +81,6 @@ complete.
 
 Copyright (C) BtTracker Authors
 
-Distributed under the New BSD License. See COPYING for further details. For a
-list of names of who's been working in BtTracker, see AUTHORS and THANKS.
+Distributed under the New BSD License. See COPYING for further details.
+
+For a list of names of who's been working in BtTracker, see AUTHORS and THANKS.
