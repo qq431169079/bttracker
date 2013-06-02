@@ -18,7 +18,7 @@ requests; support for announces and scrapes are not yet implemented.
 
 First, make sure to install the following software:
 
-* GCC, or a C-99 compiler
+* [GCC](http://gcc.gnu.org/), or a C-99 compiler
 * [pkg-config](http://www.freedesktop.org/wiki/Software/pkg-config/)
 * [Automake](http://www.gnu.org/software/automake/)
 * [Autoconf](http://www.gnu.org/software/autoconf/‎)
