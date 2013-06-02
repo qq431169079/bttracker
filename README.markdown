@@ -19,9 +19,10 @@ requests; support for announces and scrapes are not yet implemented.
 First, make sure to install the following software:
 
 * GCC, or a C-99 compiler
-* [GLib](https://developer.gnome.org/glib/) 2.36.0+
+* [pkg-config](http://www.freedesktop.org/wiki/Software/pkg-config/)
 * [Automake](http://www.gnu.org/software/automake/)
 * [Autoconf](http://www.gnu.org/software/autoconf/‎)
+* [GLib](https://developer.gnome.org/glib/) 2.36.0+
 
 Assuming that you've already cloned the repository, open a terminal and run the
 following commands in its root directory:
