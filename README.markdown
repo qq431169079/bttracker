@@ -7,6 +7,7 @@ BtTracker is a BitTorrent UDP-based tracker written in C for learning purposes.
 This code is known to compile and run on the following platforms:
 
 * Linux
+* Mac OS X 10.8 (with [Homebrew](http://mxcl.github.io/homebrew/))
 
 ### Current Status
 
