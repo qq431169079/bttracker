@@ -28,6 +28,41 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* Mutexes used to access shared data in a thread safe way. */
+pthread_mutex_t conn_mutex;
+
+/* Object where all active connections are kept. */
+bt_concurrent_connection_table_t conn_table;
+
+/* Socket used to receive data from clients. */
+int sock;
+
+/* Thread that periodically purges old connections. */
+bt_connection_purge_data_t purge_thread_data;
+pthread_t connection_purge_thread;
+
+/* Function that is executed when the signal SIGINT is received. */
+void on_sigint(int signum) {
+  syslog(LOG_DEBUG, "Freeing resources");
+
+  /* Interrupt connection purging thread. */
+  purge_thread_data.interrupted = true;
+  pthread_join(connection_purge_thread, NULL);
+
+  /* Destroy connection hash table. */
+  bt_free_concurrent_connection_table(&conn_table);
+
+  /* Close UDP socket. */
+  close(sock);
+
+  syslog(LOG_INFO, "Exiting");
+  closelog();
+
+  /* Resume signal's default behavior. */
+  signal(signum, SIG_DFL);
+  raise(signum);
+}
+
 int main(int argc, char *argv[]) {
 
   /* Syslog configuration. */
@@ -37,47 +72,20 @@ int main(int argc, char *argv[]) {
   syslog(LOG_INFO, "Welcome, version %s", PACKAGE_VERSION);
 
   syslog(LOG_DEBUG, "Creating hash table for active connections");
-  static pthread_mutex_t conn_mutex = PTHREAD_MUTEX_INITIALIZER;
-  bt_concurrent_connection_table_t conn_table = {.self = bt_new_connection_table(),
-                                                 .mutex = &conn_mutex};
-
-  /* Thread that removes inactive connections every few seconds. */
-  pthread_t connection_purge_thread;
-  bt_connection_purge_data_t purge_thread_data = {.interrupted = false,
-                                                  .table = &conn_table};
+  conn_mutex = (pthread_mutex_t) PTHREAD_MUTEX_INITIALIZER;
+  conn_table = (bt_concurrent_connection_table_t) {.self = bt_new_connection_table(),
+                                                   .mutex = &conn_mutex};
 
   /* Required by network communication code. */
   struct sockaddr_in si_me, si_other;
   socklen_t me_len, other_len;
-  int sock, reqlen;
+  int reqlen;
   char buff[BT_RECV_BUFLEN];
 
   syslog(LOG_DEBUG, "Creating UDP socket");
   if ((sock = BT_SERVER_SOCK()) == -1) {
     syslog(LOG_ERR, "Cannot create socket. Exiting");
     exit(1);
-  }
-
-  /* Function that is executed when the signal SIGINT is received. */
-  void on_sigint(int signum) {
-    syslog(LOG_DEBUG, "Freeing resources");
-
-    /* Interrupt connection purging thread. */
-    purge_thread_data.interrupted = true;
-    pthread_join(connection_purge_thread, NULL);
-
-    /* Destroy connection hash table. */
-    bt_free_concurrent_connection_table(&conn_table);
-
-    /* Close UDP socket. */
-    close(sock);
-
-    syslog(LOG_INFO, "Exiting");
-    closelog();
-
-    /* Resume signal's default behavior. */
-    signal(signum, SIG_DFL);
-    raise(signum);
   }
 
   /* Handle interruption signal (C-c on term). */
@@ -94,6 +102,8 @@ int main(int argc, char *argv[]) {
   }
 
   syslog(LOG_DEBUG, "Starting connection purging thread");
+  purge_thread_data = (bt_connection_purge_data_t) {.interrupted = false,
+                                                  .table = &conn_table};
   pthread_create(&connection_purge_thread, NULL, bt_clear_old_connections, &purge_thread_data);
 
   while (true) {
