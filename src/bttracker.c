@@ -42,26 +42,7 @@ bt_connection_purge_data_t purge_thread_data;
 pthread_t connection_purge_thread;
 
 /* Function that is executed when the signal SIGINT is received. */
-void on_sigint(int signum) {
-  syslog(LOG_DEBUG, "Freeing resources");
-
-  /* Interrupt connection purging thread. */
-  purge_thread_data.interrupted = true;
-  pthread_join(connection_purge_thread, NULL);
-
-  /* Destroy connection hash table. */
-  bt_free_concurrent_connection_table(&conn_table);
-
-  /* Close UDP socket. */
-  close(sock);
-
-  syslog(LOG_INFO, "Exiting");
-  closelog();
-
-  /* Resume signal's default behavior. */
-  signal(signum, SIG_DFL);
-  raise(signum);
-}
+void on_sigint(int signum);
 
 int main(int argc, char *argv[]) {
 
@@ -133,4 +114,25 @@ int main(int argc, char *argv[]) {
       bt_handle_connection(&data);
     }
   }
+}
+
+void on_sigint(int signum) {
+  syslog(LOG_DEBUG, "Freeing resources");
+
+  /* Interrupt connection purging thread. */
+  purge_thread_data.interrupted = true;
+  pthread_join(connection_purge_thread, NULL);
+
+  /* Destroy connection hash table. */
+  bt_free_concurrent_connection_table(&conn_table);
+
+  /* Close UDP socket. */
+  close(sock);
+
+  syslog(LOG_INFO, "Exiting");
+  closelog();
+
+  /* Resume signal's default behavior. */
+  signal(signum, SIG_DFL);
+  raise(signum);
 }
