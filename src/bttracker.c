@@ -84,7 +84,7 @@ int main(int argc, char *argv[]) {
 
   syslog(LOG_DEBUG, "Starting connection purging thread");
   purge_thread_data = (bt_connection_purge_data_t) {.interrupted = false,
-                                                  .table = &conn_table};
+                                                    .table = &conn_table};
   pthread_create(&connection_purge_thread, NULL, bt_clear_old_connections, &purge_thread_data);
 
   while (true) {
