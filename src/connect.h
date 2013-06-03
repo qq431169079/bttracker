@@ -31,7 +31,7 @@
 #ifndef BTTRACKER_CONNECT_H_
 #define BTTRACKER_CONNECT_H_
 
-/* Interval in which a connection id is considered active. */
+/* Interval, in seconds, in which a connection ID is considered active. */
 #define BT_ACTIVE_CONNECTION_TTL 120
 
 /* Interval, in seconds, in which inactive connections will be purged. */

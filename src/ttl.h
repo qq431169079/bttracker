@@ -34,10 +34,10 @@
 /* Returns the number of seconds since epoch. */
 int64_t bt_current_timestamp();
 
-/* Returns whether the given timestamp, in seconds, exceeded the ttl. */
+/* Returns whether the given timestamp, in seconds, exceeded the TTL. */
 bool bt_now_expired(int64_t ts_begin, int64_t ttl);
 
-/* Returns whether the difference between the two timestamps exceed the ttl. */
+/* Returns whether the difference between the two timestamps exceed the TTL. */
 bool bt_expired(int64_t ts_begin, int64_t ts_end, int64_t ttl);
 
 #endif // BTTRACKER_TTL_H
