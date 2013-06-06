@@ -14,7 +14,9 @@ AM_INIT_AUTOMAKE([foreign -Wall -Werror])
 
 # Checks for programs.
 AC_PROG_CC_C99
+AC_PROG_RANLIB
 AM_PROG_CC_C_O
+AM_PROG_AR
 AX_PTHREAD
 
 # Checks for libraries.
@@ -38,5 +40,6 @@ AC_FUNC_MALLOC
 AC_CHECK_FUNCS([gettimeofday])
 
 AC_CONFIG_FILES([Makefile
-                 src/Makefile])
+                 src/Makefile
+                 test/Makefile])
 AC_OUTPUT

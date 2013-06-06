@@ -8,5 +8,7 @@ compile
 configure
 depcomp
 install-sh
+ar-lib
 missing
 stamp-h1
+test-driver
