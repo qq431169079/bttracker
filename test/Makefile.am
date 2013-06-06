@@ -1,6 +1,5 @@
 AM_CFLAGS  = -g -Wall -O3 $(PTHREAD_CFLAGS) $(GLIB_CFLAGS) -I../src -include allheads.h
-AM_LDFLAGS = ../src/libbttracker.a
-LIBS = $(PTHREAD_LIBS) $(GLIB_LIBS)
+LIBS = ../src/libbttracker.a $(PTHREAD_LIBS) $(GLIB_LIBS)
 
 TESTS = ttl_tests
 
