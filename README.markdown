@@ -31,7 +31,7 @@ following commands in its root directory:
 
 $ autoreconf -iv
 $ ./configure
-$ make
+$ make check
 ````
 
 If you have trouble compiling this on your platform, please send us a pull
