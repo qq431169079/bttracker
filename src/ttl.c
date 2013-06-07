@@ -35,8 +35,8 @@ int64_t bt_current_timestamp() {
   return tv.tv_sec;
 }
 
-bool bt_now_expired(int64_t ts_begin, int64_t ttl) {
-  return bt_expired(ts_begin, bt_current_timestamp(), ttl);
+bool bt_now_expired(int64_t ts, int64_t ttl) {
+  return bt_expired(ts, bt_current_timestamp(), ttl);
 }
 
 bool bt_expired(int64_t ts_begin, int64_t ts_end, int64_t ttl) {
