@@ -5,7 +5,6 @@ LIBS = $(SRC_DIR)/libbttracker.a $(PTHREAD_LIBS) $(GLIB_LIBS)
 
 TESTS = ttl_tests
 
-# Library used by the unit tests.
 check_PROGRAMS = $(TESTS)
 
 ttl_tests_SOURCES = ttl_tests.c test_runner.c
