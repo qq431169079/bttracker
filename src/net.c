@@ -28,6 +28,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* Prepares a `bt_req` object to be sent over the wire. */
+void bt_resp_to_network(bt_resp_t *resp);
+
 struct sockaddr_in bt_local_addr(unsigned short port) {
   return (struct sockaddr_in) {
       .sin_family = AF_INET,

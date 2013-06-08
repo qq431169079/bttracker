@@ -81,13 +81,10 @@ typedef struct {
 /* Returns the local address where the UDP socket will be bounded to. */
 struct sockaddr_in bt_local_addr(unsigned short port);
 
-/* Converts a bt_req object to host byte order. */
+/* Converts a `bt_req object` to host byte order. */
 void bt_req_from_network(bt_req_t *req);
 
-/* Converts a bt_req object to network byte order. */
-void bt_req_to_network(bt_req_t *req);
-
-/* Converts a bt_connection_resp to network byte order. */
+/* Prepares a `bt_connection_resp` to be sent over the wire. */
 void bt_conn_resp_to_network(bt_connection_resp_t *resp);
 
 #endif // BTTRACKER_NET_H_
