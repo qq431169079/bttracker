@@ -9,7 +9,7 @@ char *test_bt_expired() {
   mu_assert("expired (begin < end)", bt_expired(begin, end, 4) == true);
   mu_assert("expired (begin > end)", bt_expired(end, begin, 4) == true);
 
-  return 0;
+  return NULL;
 }
 
 char *test_bt_now_expired() {
@@ -18,12 +18,12 @@ char *test_bt_now_expired() {
   mu_assert("not expired", bt_now_expired(ts, 15) == false);
   mu_assert("expired", bt_now_expired(ts, 5) == true);
 
-  return 0;
+  return NULL;
 }
 
 char *all_tests() {
   mu_run_test(test_bt_expired);
   mu_run_test(test_bt_now_expired);
 
-  return 0;
+  return NULL;
 }
