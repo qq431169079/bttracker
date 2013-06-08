@@ -1,5 +1,14 @@
 #include "minunit.h"
 
+char *test_bt_current_timestamp() {
+  int64_t now = time(NULL);
+  int64_t ts  = bt_current_timestamp();
+
+  mu_assert("current UNIX timestamp", abs(ts - now) <= 1);
+
+  return NULL;
+}
+
 char *test_bt_expired() {
   int64_t begin = 10, end = 15;
 
@@ -22,6 +31,7 @@ char *test_bt_now_expired() {
 }
 
 char *all_tests() {
+  mu_run_test(test_bt_current_timestamp);
   mu_run_test(test_bt_expired);
   mu_run_test(test_bt_now_expired);
 
