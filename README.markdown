@@ -36,15 +36,15 @@ $ ./configure
 $ make
 ````
 
-If you have trouble compiling this on your platform, please send us a pull
-request.
-
-In order to run the unit the unit tests:
+In order to run the unit tests:
 
 ````bash
 
 $ make test
 ````
+
+If you have failing tests (or even trouble compiling this project on your
+platform), please send us a pull request.
 
 ## Running
 
