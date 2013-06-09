@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/danielfm/bttracker.png?branch=master)](https://travis-ci.org/danielfm/bttracker)
 
-BtTracker is a BitTorrent UDP-based tracker written in C for learning purposes.
+BtTracker is a UDP-based BitTorrent tracker written in C for learning purposes.
 
 ## Supported Platforms
 
