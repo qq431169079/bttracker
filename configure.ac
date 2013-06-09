@@ -20,7 +20,7 @@ AM_PROG_AR
 AX_PTHREAD
 
 # Checks for libraries.
-PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.36.0])
+PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.32.3])
 
 # Checks for header files.
 AC_CHECK_HEADERS([syslog.h sys/time.h arpa/inet.h netinet/in.h sys/socket.h])
