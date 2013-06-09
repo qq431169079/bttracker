@@ -31,11 +31,18 @@ following commands in its root directory:
 
 $ autoreconf -iv
 $ ./configure
-$ make check
+$ make
 ````
 
 If you have trouble compiling this on your platform, please send us a pull
 request.
+
+In order to run the unit the unit tests:
+
+````bash
+
+$ make test
+````
 
 ## Running
 
