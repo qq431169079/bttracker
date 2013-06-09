@@ -5,7 +5,7 @@
 m4_include([m4/ax_pthread.m4])
 
 # Autoconf setup.
-AC_PREREQ([2.69])
+AC_PREREQ([2.59])
 AC_INIT([bttracker], [0.0.1])
 AC_CONFIG_SRCDIR([src/bttracker.c])
 AC_CONFIG_HEADERS([config.h])
