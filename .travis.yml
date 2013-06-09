@@ -9,4 +9,4 @@ before_script:
 
 before_install:
   - sudo apt-get update -qq
-  - sudo apt-get install -qq libglib2.0-0
+  - sudo apt-get install -qq libglib2.0-0 libglib2.0-dev
