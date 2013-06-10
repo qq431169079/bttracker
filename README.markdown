@@ -24,7 +24,7 @@ First, make sure to install the following software:
 * [pkg-config](http://www.freedesktop.org/wiki/Software/pkg-config/)
 * [Automake](http://www.gnu.org/software/automake/)
 * [Autoconf](http://www.gnu.org/software/autoconf/‎)
-* [GLib](https://developer.gnome.org/glib/) 2.36.0+
+* [GLib](https://developer.gnome.org/glib/)
 
 Assuming that you've already cloned the repository, open a terminal and run the
 following commands in its root directory:
