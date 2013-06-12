@@ -62,9 +62,9 @@ char *test_bt_conn_resp_to_network() {
 
   bt_conn_resp_to_network(&resp);
 
-  mu_assert("a", resp.action == htonl(3));
-  mu_assert("b", resp.transaction_id == htonl(3));
-  mu_assert("c", resp.connection_id == htonll(3));
+  mu_assert("action in network byte order", resp.action == htonl(3));
+  mu_assert("transaction_id in network byte order", resp.transaction_id == htonl(3));
+  mu_assert("connection_id in network byte order", resp.connection_id == htonll(3));
 
   return NULL;
 }
