@@ -60,8 +60,6 @@ int main(int argc, char *argv[]) {
   /* Required by network communication code. */
   struct sockaddr_in si_me, si_other;
   socklen_t me_len, other_len;
-  int reqlen;
-  char buff[BT_RECV_BUFLEN];
 
   syslog(LOG_DEBUG, "Creating UDP socket");
   if ((sock = BT_SERVER_SOCK()) == -1) {
@@ -88,8 +86,12 @@ int main(int argc, char *argv[]) {
   pthread_create(&connection_purge_thread, NULL, bt_clear_old_connections, &purge_thread_data);
 
   while (true) {
-    if ((reqlen = recvfrom(sock, buff, BT_RECV_BUFLEN, 0,
-                           (struct sockaddr *) &si_other, &other_len)) == -1) {
+    int pthread_status;
+    pthread_t handler;
+    char buff[BT_RECV_BUFLEN];
+
+    if (recvfrom(sock, buff, BT_RECV_BUFLEN, 0, (struct sockaddr *) &si_other,
+                 &other_len) == -1) {
       syslog(LOG_ERR, "Error in recvfrom(). Exiting");
       exit(3);
     }
@@ -106,12 +108,17 @@ int main(int argc, char *argv[]) {
 
     /* Dispatch the request to the appropriate handler function. */
     if (request->action == BT_ACTION_CONNECT) {
-      bt_connection_data_t data = {.request = request, .sock = sock,
+      bt_connection_data_t data = {.request = request,
+                                   .sock = sock,
                                    .client_addr = &si_other,
                                    .client_addr_len = other_len,
                                    .table = &conn_table};
 
-      bt_handle_connection(&data);
+      pthread_status = pthread_create(&handler, NULL, bt_handle_connection, &data);
+    }
+
+    if (pthread_status != 0) {
+      syslog(LOG_ERR, "Cannot create handler thread");
     }
   }
 }

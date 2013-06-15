@@ -88,7 +88,8 @@ bool bt_valid_request(bt_connection_table_t *table, const bt_req_t *req) {
   return false;
 }
 
-void *bt_handle_connection(const bt_connection_data_t *in) {
+void *bt_handle_connection(void *data) {
+  bt_connection_data_t *in = (bt_connection_data_t *) data;
   const bt_concurrent_connection_table_t *table = in->table;
 
   syslog(LOG_DEBUG, "Handling incoming connection");
@@ -113,7 +114,9 @@ void *bt_handle_connection(const bt_connection_data_t *in) {
     /* Convert the response data to network byte order before sending it. */
     bt_conn_resp_to_network(&resp);
 
-    syslog(LOG_DEBUG, "Sending response to matching Transaction ID %" PRId32, in->request->transaction_id);
+    syslog(LOG_DEBUG, "Sending response to matching Transaction ID %" PRId32,
+           in->request->transaction_id);
+
     if (sendto(in->sock, &resp, sizeof(resp), 0,
                (struct sockaddr *) in->client_addr, in->client_addr_len) == -1) {
       syslog(LOG_ERR, "Error in sendto()");
