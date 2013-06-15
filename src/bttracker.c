@@ -93,11 +93,16 @@ int main(int argc, char *argv[]) {
     if (recvfrom(sock, buff, BT_RECV_BUFLEN, 0, (struct sockaddr *) &si_other,
                  &other_len) == -1) {
       syslog(LOG_ERR, "Error in recvfrom(). Exiting");
-      exit(3);
+      exit(BT_EXIT_NETWORK_ERROR);
     }
 
     /* Get the basic request data. */
-    bt_req_t *request = (bt_req_t *) buff;
+    bt_req_t *request = (bt_req_t *) strdup(buff);
+
+    if (request == NULL) {
+      syslog(LOG_ERR, "Cannot allocate memory. Exiting");
+      exit(BT_EXIT_MALLOC_ERROR);
+    }
 
     /* Convert numbers from network byte order to host byte order. */
     bt_req_from_network(request);

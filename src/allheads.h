@@ -32,6 +32,7 @@
 #define BTTRACKER_ALLHEADS_H_
 
 #include <stdio.h>
+#include <string.h>
 #include <sys/time.h>
 
 #ifdef HAVE_CONFIG_H

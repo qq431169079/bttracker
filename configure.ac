@@ -37,7 +37,7 @@ AC_TYPE_UINT32_T
 
 # Checks for library functions.
 AC_FUNC_MALLOC
-AC_CHECK_FUNCS([gettimeofday])
+AC_CHECK_FUNCS([gettimeofday strdup])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile

@@ -125,6 +125,9 @@ void *bt_handle_connection(void *data) {
     syslog(LOG_ERR, "Invalid connection data. Ignoring request");
   }
 
+  /* Frees the request object, which is a dupped version of the buffer. */
+  free(in->request);
+
   return NULL;
 }
 
