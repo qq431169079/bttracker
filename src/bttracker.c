@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
   syslog(LOG_DEBUG, "Creating UDP socket");
   if ((sock = BT_SERVER_SOCK()) == -1) {
     syslog(LOG_ERR, "Cannot create socket. Exiting");
-    exit(1);
+    exit(BT_EXIT_NETWORK_ERROR);
   }
 
   /* Handle interruption signal (C-c on term). */
@@ -77,7 +77,7 @@ int main(int argc, char *argv[]) {
   syslog(LOG_DEBUG, "Binding UDP socket to local port %" PRId32, BT_UDP_PORT);
   if (bind(sock, (struct sockaddr *) &si_me, me_len) == -1) {
     syslog(LOG_ERR, "Error in bind(). Exiting");
-    exit(2);
+    exit(BT_EXIT_NETWORK_ERROR);
   }
 
   syslog(LOG_DEBUG, "Starting connection purging thread");

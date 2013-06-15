@@ -65,7 +65,7 @@ void bt_add_connection(bt_connection_table_t *table, int64_t connection_id) {
   /* Check memory allocation result. */
   if (key == NULL || val == NULL) {
     syslog(LOG_ERR, "Cannot allocate memory for new connection");
-    exit(4);
+    exit(BT_EXIT_MALLOC_ERROR);
   }
 
   /* Store the connection into the hash table. */
