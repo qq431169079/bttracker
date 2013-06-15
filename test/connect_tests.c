@@ -68,9 +68,22 @@ char *test_bt_add_connection() {
   return NULL;
 }
 
+char *test_bt_valid_connect_request() {
+  bt_connection_table_t *table = NULL;
+
+  bt_req_t req = {.action = BT_ACTION_CONNECT, .connection_id = BT_PROTOCOL_ID};
+  mu_assert("connection with valid connection_id", bt_valid_request(table, &req) == true);
+
+  req.connection_id++;
+  mu_assert("connection with invalid connection_id", bt_valid_request(table, &req) == false);
+
+  return NULL;
+}
+
 char *all_tests() {
   mu_run_test(test_bt_new_connection_table);
   mu_run_test(test_bt_add_connection);
+  mu_run_test(test_bt_valid_connect_request);
 
   return NULL;
 }
