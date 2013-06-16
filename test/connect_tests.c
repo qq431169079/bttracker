@@ -60,7 +60,7 @@ char *test_bt_add_connection() {
   add_ts = g_hash_table_lookup(table.self, &connection_id);
 
   mu_assert("hash table should contain 1 item", g_hash_table_size(table.self) == 1);
-  mu_assert("key should be the given connection_id", &add_ts != NULL);
+  mu_assert("key should be the given connection_id", add_ts != NULL);
   mu_assert("value should be the current timestamp", abs(now_ts - *add_ts) <= 1);
 
   bt_free_concurrent_connection_table(&table);
