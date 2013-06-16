@@ -72,10 +72,12 @@ char *test_bt_valid_connect_request() {
   bt_connection_table_t *table = NULL;
 
   bt_req_t req = {.action = BT_ACTION_CONNECT, .connection_id = BT_PROTOCOL_ID};
-  mu_assert("connection with valid connection_id", bt_valid_request(table, &req) == true);
+  mu_assert("connection with valid connection_id",
+            bt_valid_request(table, &req) == true);
 
   req.connection_id++;
-  mu_assert("connection with invalid connection_id", bt_valid_request(table, &req) == false);
+  mu_assert("connection with invalid connection_id",
+            bt_valid_request(table, &req) == false);
 
   return NULL;
 }
