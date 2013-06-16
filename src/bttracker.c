@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
   pthread_create(&connection_purge_thread, NULL, bt_clear_old_connections, &purge_thread_data);
 
   while (true) {
-    int pthread_status;
+    int pthread_status = 0;
     pthread_t handler;
     char buff[BT_RECV_BUFLEN];
 
@@ -96,13 +96,18 @@ int main(int argc, char *argv[]) {
       exit(BT_EXIT_NETWORK_ERROR);
     }
 
-    /* Get the basic request data. */
-    bt_req_t *request = (bt_req_t *) strdup(buff);
+    /*
+     * Copy data to a manually-allocated memory in order to avoid problems
+     * when trying to access it on another thread.
+     */
+    bt_req_t *request = malloc(BT_RECV_BUFLEN);
 
     if (request == NULL) {
       syslog(LOG_ERR, "Cannot allocate memory. Exiting");
       exit(BT_EXIT_MALLOC_ERROR);
     }
+
+    memcpy(request, buff, sizeof(buff));
 
     /* Convert numbers from network byte order to host byte order. */
     bt_req_from_network(request);
