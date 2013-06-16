@@ -82,10 +82,47 @@ char *test_bt_valid_connect_request() {
   return NULL;
 }
 
+char *test_bt_clear_old_connections() {
+  INIT_MUTEX();
+  int64_t connection_id = 123456LL;
+  bt_concurrent_connection_table_t table = new_table(&mutex);
+
+  /* Add a sample connection. */
+  bt_add_connection(table.self, connection_id);
+
+  /* Start the connection purge thread */
+  pthread_t connection_purge_thread;
+  bt_connection_purge_data_t purge_thread_data = {.interrupted = false,
+                                                  .table = &table,
+                                                  .connection_ttl = 2,
+                                                  .purge_interval = 1};
+
+  pthread_create(&connection_purge_thread, NULL, bt_clear_old_connections,
+                 &purge_thread_data);
+
+  /* Add a newer connection that should be removed after the first one. */
+  sleep(purge_thread_data.purge_interval);
+  bt_add_connection(table.self, connection_id + 1);
+
+  /* Two connections are still valid. */
+  mu_assert("hash table should contain 2 items", g_hash_table_size(table.self) == 2);
+
+  /* Now the older connection must be purged. */
+  sleep(purge_thread_data.purge_interval * 2);
+  mu_assert("hash table should contain 1 item", g_hash_table_size(table.self) == 1);
+
+  /* Terminate the connection purging thread. */
+  purge_thread_data.interrupted = true;
+  pthread_join(connection_purge_thread, NULL);
+
+  return NULL;
+}
+
 char *all_tests() {
   mu_run_test(test_bt_new_connection_table);
   mu_run_test(test_bt_add_connection);
   mu_run_test(test_bt_valid_connect_request);
+  mu_run_test(test_bt_clear_old_connections);
 
   return NULL;
 }
