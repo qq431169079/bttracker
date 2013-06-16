@@ -54,8 +54,10 @@ int main(int argc, char *argv[]) {
 
   syslog(LOG_DEBUG, "Creating hash table for active connections");
   conn_mutex = (pthread_mutex_t) PTHREAD_MUTEX_INITIALIZER;
-  conn_table = (bt_concurrent_connection_table_t) {.self = bt_new_connection_table(),
-                                                   .mutex = &conn_mutex};
+  conn_table = (bt_concurrent_connection_table_t) {
+    .self = bt_new_connection_table(),
+    .mutex = &conn_mutex
+  };
 
   /* Required by network communication code. */
   struct sockaddr_in si_me, si_other;
@@ -81,9 +83,14 @@ int main(int argc, char *argv[]) {
   }
 
   syslog(LOG_DEBUG, "Starting connection purging thread");
-  purge_thread_data = (bt_connection_purge_data_t) {.interrupted = false,
-                                                    .table = &conn_table};
-  pthread_create(&connection_purge_thread, NULL, bt_clear_old_connections, &purge_thread_data);
+  purge_thread_data = (bt_connection_purge_data_t) {
+    .interrupted = false,
+    .table = &conn_table,
+    .connection_ttl = BT_ACTIVE_CONNECTION_TTL,
+    .purge_interval = BT_CONNECTION_PURGE_INTERVAL
+  };
+  pthread_create(&connection_purge_thread, NULL, bt_clear_old_connections,
+                 &purge_thread_data);
 
   while (true) {
     int pthread_status = 0;

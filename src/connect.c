@@ -135,11 +135,10 @@ void *bt_clear_old_connections(void *data) {
 
   while (true) {
     int steps = 0;
-    int64_t timestamp = bt_current_timestamp();
 
     /* Block this thread for a few seconds. */
-    while ((10 * steps++) < BT_CONNECTION_PURGE_INTERVAL) {
-      usleep(1000 * 100);
+    while (steps++ < in->purge_interval) {
+      sleep(1);
 
       /* Return if this thread is interrupted in the meantime. */
       if (in->interrupted) {
@@ -151,7 +150,7 @@ void *bt_clear_old_connections(void *data) {
     /* Remove old connection IDs. */
     pthread_mutex_lock(in->table->mutex);
     if (in->table->self != NULL) {
-      g_hash_table_foreach_remove(in->table->self, bt_hash_table_old_connection, &timestamp);
+      g_hash_table_foreach_remove(in->table->self, bt_hash_table_old_connection, (gpointer) &in->connection_ttl);
     }
     pthread_mutex_unlock(in->table->mutex);
   }
@@ -164,12 +163,14 @@ void bt_free_hash_table_key_val(gpointer data) {
 }
 
 gboolean bt_hash_table_old_connection(gpointer key, gpointer val, gpointer data) {
+  int *connection_ttl = (int *) data;
 
   /* Keys and values are 64-bit integers. */
-  const int64_t *now = (int64_t *) data, *added_at = (int64_t *) val;
+  int64_t timestamp = bt_current_timestamp();
+  const int64_t *added_at = (int64_t *) val;
 
   /* Check if this connection ID exceeded TTL. */
-  bool should_expire = bt_expired(*added_at, *now, BT_ACTIVE_CONNECTION_TTL);
+  bool should_expire = bt_expired(*added_at, timestamp, *connection_ttl);
 
   if (should_expire) {
     syslog(LOG_DEBUG, "Expiring Connection ID %" PRId64, *((int64_t *) key));

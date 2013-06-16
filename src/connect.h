@@ -59,6 +59,8 @@ typedef struct {
 typedef struct {
   bool interrupted;                        // Whether it should be interrupted.
   bt_concurrent_connection_table_t *table; // Active connections so far.
+  int connection_ttl;                      // Connection is valid for that many seconds.
+  int purge_interval;                      // Purging interval, in seconds.
 } bt_connection_purge_data_t;
 
 /* Creates a new hash table to store active connection IDs. */
