@@ -42,10 +42,10 @@ char *test_bt_current_timestamp() {
 char *test_bt_expired() {
   int64_t begin = 10, end = 15;
 
-  mu_assert("not expired (begin < end)", bt_expired(begin, end, 5) == false);
-  mu_assert("not expired (begin > end)", bt_expired(end, begin, 5) == false);
+  mu_assert("not expired (begin < end)", bt_expired(begin, end, 7) == false);
+  mu_assert("not expired (begin > end)", bt_expired(end, begin, 6) == false);
 
-  mu_assert("expired (begin < end)", bt_expired(begin, end, 4) == true);
+  mu_assert("expired (begin < end)", bt_expired(begin, end, 5) == true);
   mu_assert("expired (begin > end)", bt_expired(end, begin, 4) == true);
 
   return NULL;

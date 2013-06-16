@@ -40,5 +40,5 @@ bool bt_now_expired(int64_t ts, int64_t ttl) {
 }
 
 bool bt_expired(int64_t ts_begin, int64_t ts_end, int64_t ttl) {
-  return abs(ts_begin - ts_end) > ttl;
+  return abs(ts_begin - ts_end) >= ttl;
 }
