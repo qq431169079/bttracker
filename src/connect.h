@@ -75,8 +75,8 @@ void bt_add_connection(bt_connection_table_t *table, int64_t connection_id);
 /* Returns whether the incoming connection request should be accepted. */
 bool bt_valid_request(bt_connection_table_t *table, const bt_req_t *req);
 
-/* Thread that handles a connection request. */
-void *bt_handle_connection(void *data);
+/* Function that handle an incoming connection request. */
+void bt_handle_connection(bt_connection_data_t *in);
 
 /*
  * Thread that purges all connections older than 2 minutes. The argument `data`

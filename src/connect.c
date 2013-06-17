@@ -88,8 +88,7 @@ bool bt_valid_request(bt_connection_table_t *table, const bt_req_t *req) {
   return false;
 }
 
-void *bt_handle_connection(void *data) {
-  bt_connection_data_t *in = (bt_connection_data_t *) data;
+void bt_handle_connection(bt_connection_data_t *in) {
   const bt_concurrent_connection_table_t *table = in->table;
 
   syslog(LOG_DEBUG, "Handling incoming connection");
@@ -124,10 +123,6 @@ void *bt_handle_connection(void *data) {
   } else {
     syslog(LOG_ERR, "Invalid connection data. Ignoring request");
   }
-
-  free(in->request);
-
-  return NULL;
 }
 
 void *bt_clear_old_connections(void *data) {

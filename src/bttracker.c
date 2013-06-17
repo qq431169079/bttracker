@@ -93,8 +93,6 @@ int main(int argc, char *argv[]) {
                  &purge_thread_data);
 
   while (true) {
-    int pthread_status = 0;
-    pthread_t handler;
     char buff[BT_RECV_BUFLEN];
 
     if (recvfrom(sock, buff, BT_RECV_BUFLEN, 0, (struct sockaddr *) &si_other,
@@ -103,18 +101,7 @@ int main(int argc, char *argv[]) {
       exit(BT_EXIT_NETWORK_ERROR);
     }
 
-    /*
-     * Copy data to a manually-allocated memory in order to avoid problems
-     * when trying to access it on another thread.
-     */
-    bt_req_t *request = malloc(BT_RECV_BUFLEN);
-
-    if (request == NULL) {
-      syslog(LOG_ERR, "Cannot allocate memory. Exiting");
-      exit(BT_EXIT_MALLOC_ERROR);
-    }
-
-    memcpy(request, buff, sizeof(buff));
+    bt_req_t *request = (bt_req_t *) buff;
 
     /* Convert numbers from network byte order to host byte order. */
     bt_req_from_network(request);
@@ -125,17 +112,15 @@ int main(int argc, char *argv[]) {
 
     /* Dispatch the request to the appropriate handler function. */
     if (request->action == BT_ACTION_CONNECT) {
-      bt_connection_data_t data = {.request = request,
-                                   .sock = sock,
-                                   .client_addr = &si_other,
-                                   .client_addr_len = other_len,
-                                   .table = &conn_table};
+      bt_connection_data_t data = {
+        .request = request,
+        .sock = sock,
+        .client_addr = &si_other,
+        .client_addr_len = other_len,
+        .table = &conn_table
+      };
 
-      pthread_status = pthread_create(&handler, NULL, bt_handle_connection, &data);
-    }
-
-    if (pthread_status != 0) {
-      syslog(LOG_ERR, "Cannot create handler thread");
+      bt_handle_connection(&data);
     }
   }
 }
