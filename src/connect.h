@@ -46,15 +46,6 @@ typedef struct {
   pthread_mutex_t *mutex;      // Mutex used to control concurrent access.
 } bt_concurrent_connection_table_t;
 
-/* Input value for `bt_handle_connection` function. */
-typedef struct {
-  bt_req_t *request;                       // Incoming request data.
-  int sock;                                // Socket handling the connection.
-  struct sockaddr_in *client_addr;         // Source address of the request.
-  socklen_t client_addr_len;               // sizeof(*client_addr).
-  bt_concurrent_connection_table_t *table; // Active connections so far.
-} bt_connection_data_t;
-
 /* Object used as input to the connection purging thread. */
 typedef struct {
   bool interrupted;                        // Whether it should be interrupted.
@@ -76,7 +67,8 @@ void bt_add_connection(bt_connection_table_t *table, int64_t connection_id);
 bool bt_valid_request(bt_connection_table_t *table, const bt_req_t *req);
 
 /* Function that handle an incoming connection request. */
-void bt_handle_connection(bt_connection_data_t *in);
+void bt_handle_connection(bt_req_t *request, int sock, struct sockaddr_in *client_addr,
+                          socklen_t client_addr_len, bt_concurrent_connection_table_t *table);
 
 /*
  * Thread that purges all connections older than 2 minutes. The argument `data`

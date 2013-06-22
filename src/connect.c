@@ -88,12 +88,11 @@ bool bt_valid_request(bt_connection_table_t *table, const bt_req_t *req) {
   return false;
 }
 
-void bt_handle_connection(bt_connection_data_t *in) {
-  const bt_concurrent_connection_table_t *table = in->table;
-
+void bt_handle_connection(bt_req_t *request, int sock, struct sockaddr_in *client_addr,
+                          socklen_t client_addr_len, bt_concurrent_connection_table_t *table) {
   syslog(LOG_DEBUG, "Handling incoming connection");
 
-  if (bt_valid_request(table->self, in->request)) {
+  if (bt_valid_request(table->self, request)) {
 
     /* According to the spec, the connection ID must be a random 64-bit int. */
     int64_t connection_id = bt_random_int64();
@@ -106,18 +105,18 @@ void bt_handle_connection(bt_connection_data_t *in) {
     pthread_mutex_unlock(table->mutex);
 
     /* Response data to this connection request. */
-    bt_connection_resp_t resp = {.action = in->request->action,
-                                 .transaction_id = in->request->transaction_id,
+    bt_connection_resp_t resp = {.action = request->action,
+                                 .transaction_id = request->transaction_id,
                                  .connection_id = connection_id};
 
     /* Convert the response data to network byte order before sending it. */
     bt_conn_resp_to_network(&resp);
 
     syslog(LOG_DEBUG, "Sending response to matching Transaction ID %" PRId32,
-           in->request->transaction_id);
+           request->transaction_id);
 
-    if (sendto(in->sock, &resp, sizeof(resp), 0,
-               (struct sockaddr *) in->client_addr, in->client_addr_len) == -1) {
+    if (sendto(sock, &resp, sizeof(resp), 0,
+               (struct sockaddr *) client_addr, client_addr_len) == -1) {
       syslog(LOG_ERR, "Error in sendto()");
     }
   } else {

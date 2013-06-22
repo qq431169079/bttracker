@@ -112,15 +112,7 @@ int main(int argc, char *argv[]) {
 
     /* Dispatch the request to the appropriate handler function. */
     if (request->action == BT_ACTION_CONNECT) {
-      bt_connection_data_t data = {
-        .request = request,
-        .sock = sock,
-        .client_addr = &si_other,
-        .client_addr_len = other_len,
-        .table = &conn_table
-      };
-
-      bt_handle_connection(&data);
+      bt_handle_connection(request, sock, &si_other, other_len, &conn_table);
     }
   }
 }
