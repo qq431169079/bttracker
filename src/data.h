@@ -28,63 +28,19 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BTTRACKER_ALLHEADS_H_
-#define BTTRACKER_ALLHEADS_H_
+#ifndef BTTRACKER_DATA_H_
+#define BTTRACKER_DATA_H_
 
-#include <stdio.h>
-#include <string.h>
-#include <sys/time.h>
+/* Using glib hash table. */
+typedef GHashTable bt_hash_table_t;
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+/* Object that holds the hash table and its mutex together. */
+typedef struct {
+  bt_hash_table_t *self;     // Hash table of active connections.
+  pthread_mutex_t *mutex;    // Mutex used to control concurrent access.
+} bt_concurrent_hashtable_t;
 
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
+/* Destroys the given concurrent hash table object. */
+void bt_free_concurrent_hashtable(bt_concurrent_hashtable_t *table);
 
-#ifdef STDC_HEADERS
-#include <stdlib.h>
-#endif
-
-#ifdef HAVE_STDBOOL_H
-#include <stdbool.h>
-#endif
-
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#include <sys/types.h>
-#endif
-
-#ifdef HAVE_SYSLOG_H
-#include <syslog.h>
-#endif
-
-#ifdef HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
-
-#ifdef HAVE_ARPA_INET_H
-#include <arpa/inet.h>
-#endif
-
-#ifdef HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif
-
-#ifdef HAVE_PTHREAD
-#include <pthread.h>
-#endif
-
-#include <glib.h>
-
-/* Application headers. */
-#include "byteorder.h"
-#include "random.h"
-#include "data.h"
-#include "net.h"
-#include "ttl.h"
-#include "connect.h"
-#include "exit.h"
-
-#endif // BTTRACKER_ALLHEADS_H_
+#endif // BTTRACKER_DATA_H_

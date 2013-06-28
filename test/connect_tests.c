@@ -36,23 +36,23 @@
   pthread_mutex_init(&mutex, NULL);
 
 /* Creates a new empty connection table. */
-bt_concurrent_connection_table_t new_table(pthread_mutex_t *mutex);
+bt_concurrent_hashtable_t new_table(pthread_mutex_t *mutex);
 
 char *test_bt_new_connection_table() {
   INIT_MUTEX();
-  bt_concurrent_connection_table_t table = new_table(&mutex);
+  bt_concurrent_hashtable_t table = new_table(&mutex);
 
   mu_assert("glib hash table allocation", table.self != NULL);
   mu_assert("hash table should be empty", g_hash_table_size(table.self) == 0);
 
-  bt_free_concurrent_connection_table(&table);
+  bt_free_concurrent_hashtable(&table);
 
   return NULL;
 }
 
 char *test_bt_add_connection() {
   INIT_MUTEX();
-  bt_concurrent_connection_table_t table = new_table(&mutex);
+  bt_concurrent_hashtable_t table = new_table(&mutex);
   int64_t connection_id = 123456LL;
   int64_t now_ts = bt_current_timestamp(), *add_ts;
 
@@ -63,13 +63,13 @@ char *test_bt_add_connection() {
   mu_assert("key should be the given connection_id", add_ts != NULL);
   mu_assert("value should be the current timestamp", abs(now_ts - *add_ts) <= 1);
 
-  bt_free_concurrent_connection_table(&table);
+  bt_free_concurrent_hashtable(&table);
 
   return NULL;
 }
 
 char *test_bt_valid_connect_request() {
-  bt_connection_table_t *table = NULL;
+  bt_hash_table_t *table = NULL;
 
   bt_req_t req = {.action = BT_ACTION_CONNECT, .connection_id = BT_PROTOCOL_ID};
   mu_assert("connection with valid connection_id",
@@ -85,7 +85,7 @@ char *test_bt_valid_connect_request() {
 char *test_bt_clear_old_connections() {
   INIT_MUTEX();
   int64_t connection_id = 123456LL;
-  bt_concurrent_connection_table_t table = new_table(&mutex);
+  bt_concurrent_hashtable_t table = new_table(&mutex);
 
   /* Add a sample connection. */
   bt_add_connection(table.self, connection_id);
@@ -127,7 +127,7 @@ char *all_tests() {
   return NULL;
 }
 
-bt_concurrent_connection_table_t new_table(pthread_mutex_t *mutex) {
-  bt_connection_table_t *table = bt_new_connection_table();
-  return (bt_concurrent_connection_table_t) {.self = table, .mutex = mutex};
+bt_concurrent_hashtable_t new_table(pthread_mutex_t *mutex) {
+  bt_hash_table_t *table = bt_new_connection_table();
+  return (bt_concurrent_hashtable_t) {.self = table, .mutex = mutex};
 }

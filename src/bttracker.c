@@ -32,7 +32,7 @@
 pthread_mutex_t conn_mutex;
 
 /* Object where all active connections are kept. */
-bt_concurrent_connection_table_t conn_table;
+bt_concurrent_hashtable_t conn_table;
 
 /* Socket used to receive data from clients. */
 int sock;
@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
 
   syslog(LOG_DEBUG, "Creating hash table for active connections");
   conn_mutex = (pthread_mutex_t) PTHREAD_MUTEX_INITIALIZER;
-  conn_table = (bt_concurrent_connection_table_t) {
+  conn_table = (bt_concurrent_hashtable_t) {
     .self = bt_new_connection_table(),
     .mutex = &conn_mutex
   };
@@ -101,7 +101,15 @@ int main(int argc, char *argv[]) {
       exit(BT_EXIT_NETWORK_ERROR);
     }
 
+    /* Get basic request data. */
     bt_req_t *request = (bt_req_t *) buff;
+
+    /* Pointer to response data object and its length. */
+    void *response_data;
+    int response_len = -1;
+
+    /* Pointer to a function that knows how to free `response_data`. */
+    void (*response_free)(void *);
 
     /* Convert numbers from network byte order to host byte order. */
     bt_req_from_network(request);
@@ -112,7 +120,28 @@ int main(int argc, char *argv[]) {
 
     /* Dispatch the request to the appropriate handler function. */
     if (request->action == BT_ACTION_CONNECT) {
-      bt_handle_connection(request, sock, &si_other, other_len, &conn_table);
+      response_free = bt_free_connection_response;
+      response_data = malloc(sizeof(bt_connection_resp_t));
+
+      if (response_data == NULL) {
+        syslog(LOG_ERR, "Cannot allocate memory for connection response object");
+        exit(BT_EXIT_MALLOC_ERROR);
+      }
+
+      response_len = bt_handle_connection(request, response_data, &conn_table);
+    }
+
+    if (response_len >= 0) {
+      syslog(LOG_DEBUG, "Sending response to matching Transaction ID %" PRId32,
+             request->transaction_id);
+
+      if (sendto(sock, response_data, response_len, 0,
+                 (struct sockaddr *) &si_other, other_len) == -1) {
+        syslog(LOG_ERR, "Error in sendto()");
+      }
+
+      /* Destroys response data using the appropriate function. */
+      response_free(response_data);
     }
   }
 }
@@ -125,7 +154,7 @@ void on_sigint(int signum) {
   pthread_join(connection_purge_thread, NULL);
 
   /* Destroy connection hash table. */
-  bt_free_concurrent_connection_table(&conn_table);
+  bt_free_concurrent_hashtable(&conn_table);
 
   /* Close UDP socket. */
   close(sock);

@@ -35,7 +35,7 @@ void bt_free_hash_table_key_val(gpointer data);
 gboolean bt_hash_table_old_connection(gpointer key, gpointer val, gpointer data);
 
 
-bt_connection_table_t *bt_new_connection_table() {
+bt_hash_table_t *bt_new_connection_table() {
 
   /* Keys and values of a connection hash table are 64-bit integers. */
   return g_hash_table_new_full(g_int64_hash, g_int64_equal,
@@ -43,19 +43,7 @@ bt_connection_table_t *bt_new_connection_table() {
                                bt_free_hash_table_key_val);
 }
 
-void bt_free_concurrent_connection_table(bt_concurrent_connection_table_t *table) {
-
-  /* Free the connection hash table. */
-  pthread_mutex_lock(table->mutex);
-  g_hash_table_destroy(table->self);
-  table->self = NULL;
-  pthread_mutex_unlock(table->mutex);
-
-  /* Free the connection mutex. */
-  pthread_mutex_destroy(table->mutex);
-}
-
-void bt_add_connection(bt_connection_table_t *table, int64_t connection_id) {
+void bt_add_connection(bt_hash_table_t *table, int64_t connection_id) {
   int64_t *key, *val;
 
   /* Store key and value into the heap. */
@@ -75,7 +63,7 @@ void bt_add_connection(bt_connection_table_t *table, int64_t connection_id) {
   syslog(LOG_DEBUG, "Registered new connection, ID = %" PRId64, connection_id);
 }
 
-bool bt_valid_request(bt_connection_table_t *table, const bt_req_t *req) {
+bool bt_valid_request(bt_hash_table_t *table, const bt_req_t *req) {
   bt_action action = req->action;
 
   if (action == BT_ACTION_CONNECT) {
@@ -88,40 +76,38 @@ bool bt_valid_request(bt_connection_table_t *table, const bt_req_t *req) {
   return false;
 }
 
-void bt_handle_connection(bt_req_t *request, int sock, struct sockaddr_in *client_addr,
-                          socklen_t client_addr_len, bt_concurrent_connection_table_t *table) {
+void bt_free_connection_response(void *resp) {
+  free(resp);
+}
+
+int bt_handle_connection(bt_req_t *request, bt_connection_resp_t *out,
+                         bt_concurrent_hashtable_t *table) {
   syslog(LOG_DEBUG, "Handling incoming connection");
 
-  if (bt_valid_request(table->self, request)) {
-
-    /* According to the spec, the connection ID must be a random 64-bit int. */
-    int64_t connection_id = bt_random_int64();
-
-    /* Add connection ID to the table of active connections. */
-    pthread_mutex_lock(table->mutex);
-    if (table->self != NULL) {
-      bt_add_connection(table->self, connection_id);
-    }
-    pthread_mutex_unlock(table->mutex);
-
-    /* Response data to this connection request. */
-    bt_connection_resp_t resp = {.action = request->action,
-                                 .transaction_id = request->transaction_id,
-                                 .connection_id = connection_id};
-
-    /* Convert the response data to network byte order before sending it. */
-    bt_conn_resp_to_network(&resp);
-
-    syslog(LOG_DEBUG, "Sending response to matching Transaction ID %" PRId32,
-           request->transaction_id);
-
-    if (sendto(sock, &resp, sizeof(resp), 0,
-               (struct sockaddr *) client_addr, client_addr_len) == -1) {
-      syslog(LOG_ERR, "Error in sendto()");
-    }
-  } else {
+  if (!bt_valid_request(table->self, request)) {
     syslog(LOG_ERR, "Invalid connection data. Ignoring request");
+    return -1;
   }
+
+  /* According to the spec, the connection ID must be a random 64-bit int. */
+  int64_t connection_id = bt_random_int64();
+
+  /* Add connection ID to the table of active connections. */
+  pthread_mutex_lock(table->mutex);
+  if (table->self != NULL) {
+    bt_add_connection(table->self, connection_id);
+  }
+  pthread_mutex_unlock(table->mutex);
+
+  /* Response data to this connection request. */
+  out->action = request->action;
+  out->transaction_id = request->transaction_id;
+  out->connection_id = connection_id;
+
+  /* Convert the response data to network byte order. */
+  bt_conn_resp_to_network(out);
+
+  return sizeof(*out);
 }
 
 void *bt_clear_old_connections(void *data) {

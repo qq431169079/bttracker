@@ -37,38 +37,34 @@
 /* Interval, in seconds, in which inactive connections will be purged. */
 #define BT_CONNECTION_PURGE_INTERVAL 10
 
-/* Type used to store the active connections. */
-typedef GHashTable bt_connection_table_t;
-
-/* Object that holds the hash table and its mutex together. */
-typedef struct {
-  bt_connection_table_t *self; // Hash table of active connections.
-  pthread_mutex_t *mutex;      // Mutex used to control concurrent access.
-} bt_concurrent_connection_table_t;
-
 /* Object used as input to the connection purging thread. */
 typedef struct {
-  bool interrupted;                        // Whether it should be interrupted.
-  bt_concurrent_connection_table_t *table; // Active connections so far.
-  int connection_ttl;                      // Connection is valid for that many seconds.
-  int purge_interval;                      // Purging interval, in seconds.
+  bool interrupted;                 // Whether it should be interrupted.
+  bt_concurrent_hashtable_t *table; // Active connections so far.
+  int connection_ttl;               // Connection is valid for that many seconds.
+  int purge_interval;               // Purging interval, in seconds.
 } bt_connection_purge_data_t;
 
 /* Creates a new hash table to store active connection IDs. */
-bt_connection_table_t *bt_new_connection_table();
-
-/* Destroys the connection hash table object. */
-void bt_free_concurrent_connection_table(bt_concurrent_connection_table_t *table);
+bt_hash_table_t *bt_new_connection_table();
 
 /* Adds a new connection ID to the hash table of active connections. */
-void bt_add_connection(bt_connection_table_t *table, int64_t connection_id);
+void bt_add_connection(bt_hash_table_t *table, int64_t connection_id);
 
 /* Returns whether the incoming connection request should be accepted. */
-bool bt_valid_request(bt_connection_table_t *table, const bt_req_t *req);
+bool bt_valid_request(bt_hash_table_t *table, const bt_req_t *req);
 
-/* Function that handle an incoming connection request. */
-void bt_handle_connection(bt_req_t *request, int sock, struct sockaddr_in *client_addr,
-                          socklen_t client_addr_len, bt_concurrent_connection_table_t *table);
+/* Destroys a connection response object. */
+void bt_free_connection_response(void *resp);
+
+/*
+ * Function that handles an incoming connection request. If the given request
+ * is a valid connection request, the connection will be added to the table
+ * and the function will output the response data to pointer `out` and return
+ * the response length.
+ */
+int bt_handle_connection(bt_req_t *request, bt_connection_resp_t *out,
+                         bt_concurrent_hashtable_t *table);
 
 /*
  * Thread that purges all connections older than 2 minutes. The argument `data`
