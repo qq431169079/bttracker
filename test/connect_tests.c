@@ -36,7 +36,7 @@
   pthread_mutex_init(&mutex, NULL);
 
 /* Creates a new empty connection table. */
-bt_concurrent_hashtable_t new_table(pthread_mutex_t *mutex);
+bt_concurrent_hashtable_t new_table(const pthread_mutex_t *mutex);
 
 char *test_bt_new_connection_table() {
   INIT_MUTEX();
@@ -127,7 +127,7 @@ char *all_tests() {
   return NULL;
 }
 
-bt_concurrent_hashtable_t new_table(pthread_mutex_t *mutex) {
+bt_concurrent_hashtable_t new_table(const pthread_mutex_t *mutex) {
   bt_hash_table_t *table = bt_new_connection_table();
   return (bt_concurrent_hashtable_t) {.self = table, .mutex = mutex};
 }
