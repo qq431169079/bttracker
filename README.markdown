@@ -5,15 +5,15 @@
 BtTracker is a [BEP-15](http://www.bittorrent.org/beps/bep_0015.html) (UDP
 Tracker Protocol for BitTorrent) implementation in C.
 
-## Supported Platforms
-
-This code is known to compile and run on Linux (tested on ArchLinux and Ubuntu).
-
-### Features
+## Features
 
 * Uses Redis as data storage
 * Configurable via `.conf` file
 * Syslog integration with detailed logging (debug mode)
+
+## Supported Platforms
+
+This code is known to compile and run on Linux (tested on ArchLinux and Ubuntu).
 
 ### Current Status
 
