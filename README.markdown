@@ -2,8 +2,8 @@
 
 [![Build Status](https://travis-ci.org/danielfm/bttracker.png?branch=master)](https://travis-ci.org/danielfm/bttracker)
 
-BtTracker is a Redis-backed UDP-based BitTorrent tracker written in C for
-learning purposes.
+BtTracker is a [BEP-15](http://www.bittorrent.org/beps/bep_0015.html) (UDP
+Tracker Protocol for BitTorrent) implementation in C for learning purposes.
 
 ## Supported Platforms
 
@@ -11,7 +11,7 @@ This code is known to compile and run on Linux (tested on ArchLinux and Ubuntu).
 
 ### Features
 
-* Stores data on Redis (convenience and performance :-)
+* Uses Redis as data storage
 * Configurable via `.conf` file
 * Syslog integration with detailed logging (debug mode)
 
