@@ -34,4 +34,7 @@
 /*  Returns a random int64_t. */
 int64_t bt_random_int64(void);
 
+/* Returns a random number between min (inclusive) and max (inclusive). */
+uint32_t randr(uint32_t min, uint32_t max);
+
 #endif // BTTRACKER_RANDOM_H_

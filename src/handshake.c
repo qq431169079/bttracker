@@ -28,42 +28,26 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "minunit.h"
+bool bt_valid_request(redisContext *redis, bt_config_t *config, const bt_req_t *req) {
+  switch (req->action) {
+  case BT_ACTION_CONNECT:
+    if (req->connection_id == BT_PROTOCOL_ID) {
+      return true;
+    }
+    syslog(LOG_ERR, "Connection ID does not match the protocol ID");
+    break;
 
-char *test_bt_current_timestamp() {
-  int64_t now = time(NULL);
-  int64_t ts  = bt_current_timestamp();
+  case BT_ACTION_ANNOUNCE:
+  case BT_ACTION_SCRAPE:
+    if (bt_connection_valid(redis, config, req->connection_id)) {
+      return true;
+    }
+    syslog(LOG_ERR, "Connection ID %" PRId64 " not valid", req->connection_id);
+    break;
 
-  mu_assert("current UNIX timestamp", abs(ts - now) <= 1);
+  default:
+    syslog(LOG_DEBUG, "Action not supported");
+  }
 
-  return NULL;
-}
-
-char *test_bt_expired() {
-  int64_t begin = 10, end = 15;
-
-  mu_assert("not expired (begin < end)", bt_expired(begin, end, 7) == false);
-  mu_assert("not expired (begin > end)", bt_expired(end, begin, 6) == false);
-
-  mu_assert("expired (begin < end)", bt_expired(begin, end, 5) == true);
-  mu_assert("expired (begin > end)", bt_expired(end, begin, 4) == true);
-
-  return NULL;
-}
-
-char *test_bt_now_expired() {
-  int64_t ts = bt_current_timestamp() - 10;
-
-  mu_assert("not expired", bt_now_expired(ts, 15) == false);
-  mu_assert("expired", bt_now_expired(ts, 5) == true);
-
-  return NULL;
-}
-
-char *all_tests() {
-  mu_run_test(test_bt_current_timestamp);
-  mu_run_test(test_bt_expired);
-  mu_run_test(test_bt_now_expired);
-
-  return NULL;
+  return false;
 }

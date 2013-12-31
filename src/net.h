@@ -31,17 +31,11 @@
 #ifndef BTTRACKER_NET_H_
 #define BTTRACKER_NET_H_
 
-/* Macro that returns a UDP-based datagram socket. */
-#define BT_SERVER_SOCK() (socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP))
-
 /* Buffer length used to receive data from clients. */
 #define BT_RECV_BUFLEN 1024
 
 /* 64-bit integer that identifies the UDP-based tracker protocol. */
 #define BT_PROTOCOL_ID 0x41727101980LL
-
-/* UDP port number to listen to. */
-#define BT_UDP_PORT 1234
 
 /* Fields common to all types of requests. */
 #define _BT_REQUEST_HEADER_  \
@@ -62,6 +56,14 @@ typedef enum {
   BT_ACTION_ERROR    = 3
 } bt_action;
 
+/* Types of announce events. */
+typedef enum {
+  BT_EVENT_NONE      = 0,
+  BT_EVENT_COMPLETED = 1,
+  BT_EVENT_STARTED   = 2,
+  BT_EVENT_STOPPED   = 3
+} bt_announce_event;
+
 /* Object that contains fields common to all types of requests. */
 typedef struct {
   _BT_REQUEST_HEADER_
@@ -78,13 +80,57 @@ typedef struct {
   int64_t connection_id;
 } bt_connection_resp_t;
 
-/* Returns the local address where the UDP socket will be bounded to. */
-struct sockaddr_in bt_local_addr(unsigned short port);
+/* Data sent by the client when it's announcing itself. */
+typedef struct {
+  _BT_REQUEST_HEADER_
+  int8_t info_hash[20];
+  int8_t peer_id[20];
+  int64_t downloaded;
+  int64_t left;
+  int64_t uploaded;
+  bt_announce_event event;
+  uint32_t ipv4_addr;
+  int32_t key;
+  int32_t num_want;
+  uint16_t port;
+} bt_announce_req_t;
+
+/* Data sent to the client in response to an announce request. */
+typedef struct {
+  _BT_RESPONSE_HEADER_
+  int32_t interval;
+  int32_t leechers;
+  int32_t seeders;
+} bt_announce_resp_t;
+
+/* Peer address. */
+typedef struct {
+  int32_t ipv4_addr;
+  uint16_t port;
+} bt_peer_addr_t;
+
+/* Object that holds serialized data to be transmitted over the wire. */
+typedef struct {
+  size_t length;
+  void *data;
+} bt_response_buffer_t;
+
+/* Fills a `struct addrinfo` and returns a corresponding UDP socket. */
+int bt_ipv4_udp_sock(uint16_t port, struct addrinfo **addrinfo);
 
 /* Converts a `bt_req object` to host byte order. */
-void bt_req_from_network(bt_req_t *req);
+void bt_req_to_host(bt_req_t *req);
 
-/* Prepares a `bt_connection_resp` to be sent over the wire. */
-void bt_conn_resp_to_network(bt_connection_resp_t *resp);
+/* Prepares a `bt_connection_resp_t` to be sent over the wire. */
+void bt_connection_resp_to_network(bt_connection_resp_t *resp);
+
+/* Converts a `bt_announce_req_t` to host byte order. */
+void bt_announce_req_to_host(bt_announce_req_t *req);
+
+/* Prepares a `bt_announce_resp_t` to be sent over the wire. */
+void bt_announce_resp_to_network(bt_announce_resp_t *resp);
+
+/* Prepares a  `bt_peer_addr_t` to be sent over the wire. */
+void bt_announce_peer_addr_to_network(bt_peer_addr_t *peer_addr);
 
 #endif // BTTRACKER_NET_H_

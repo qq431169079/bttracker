@@ -28,75 +28,69 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Mutexes used to access shared data in a thread safe way. */
-pthread_mutex_t conn_mutex;
+/* Redis connection handler. */
+redisContext *redis;
 
-/* Object where all active connections are kept. */
-bt_concurrent_hashtable_t conn_table;
+/* Configuration data. */
+bt_config_t config;
 
-/* Socket used to receive data from clients. */
-int sock;
-
-/* Thread that periodically purges old connections. */
-bt_connection_purge_data_t purge_thread_data;
-pthread_t connection_purge_thread;
+/* Input socket descriptors. */
+int in_sock;
+struct addrinfo *in_addrinfo;
 
 /* Function that is executed when the signal SIGINT is received. */
 void on_sigint(int signum);
 
 int main(int argc, char *argv[]) {
 
-  /* Syslog configuration. */
-  // setlogmask(LOG_UPTO(LOG_ERR));
-  openlog(PACKAGE, LOG_PID | LOG_PERROR, LOG_LOCAL0);
+  /* Seed the pseudo-random number generator. */
+  srand(time(NULL));
 
-  syslog(LOG_INFO, "Welcome, version %s", PACKAGE_VERSION);
-
-  syslog(LOG_DEBUG, "Creating hash table for active connections");
-  conn_mutex = (pthread_mutex_t) PTHREAD_MUTEX_INITIALIZER;
-  conn_table = (bt_concurrent_hashtable_t) {
-    .self = bt_new_connection_table(),
-    .mutex = &conn_mutex
-  };
-
-  /* Required by network communication code. */
-  struct sockaddr_in si_me, si_other;
-  socklen_t me_len, other_len;
-
-  syslog(LOG_DEBUG, "Creating UDP socket");
-  if ((sock = BT_SERVER_SOCK()) == -1) {
-    syslog(LOG_ERR, "Cannot create socket. Exiting");
-    exit(BT_EXIT_NETWORK_ERROR);
+  if (argc != 2) {
+    syslog(LOG_ERR, "Please specify the configuration file. Usage: %s <config_file>", PACKAGE_NAME);
+    exit(BT_EXIT_CONFIG_ERROR);
   }
+
+  /* Reads the configuration file. */
+  if (!bt_load_config(argv[1], &config)) {
+    exit(BT_EXIT_CONFIG_ERROR);
+  }
+
+  /* Default logging level. */
+  setlogmask(LOG_UPTO(LOG_INFO));
+
+  if (config.bttracker_debug_mode) {
+    setlogmask(LOG_UPTO(LOG_DEBUG));
+  }
+
+  openlog(PACKAGE, LOG_PID | LOG_PERROR | LOG_CONS, LOG_LOCAL0);
+  syslog(LOG_INFO, "Welcome to %s, version %s", PACKAGE_NAME, PACKAGE_VERSION);
+
+  /* Connects to a Redis instance where the data should be stored. */
+  redis = bt_redis_connect(config.redis_host, config.redis_port, config.redis_timeout * 1000, config.redis_db);
 
   /* Handle interruption signal (C-c on term). */
   signal(SIGINT, on_sigint);
 
-  /* Local address where the UDP socket will bind against. */
-  si_me = bt_local_addr(BT_UDP_PORT);
-  me_len = sizeof(si_me), other_len = sizeof(si_other);
+  /* Required by network communication code. */
+  struct sockaddr_in si_other;
+  socklen_t other_len = sizeof(si_other);
 
-  syslog(LOG_DEBUG, "Binding UDP socket to local port %" PRId32, BT_UDP_PORT);
-  if (bind(sock, (struct sockaddr *) &si_me, me_len) == -1) {
+  /* Local address where the UDP server socket will bind against. */
+  syslog(LOG_DEBUG, "Creating UDP server socket");
+  in_sock = bt_ipv4_udp_sock(config.bttracker_port, &in_addrinfo);
+
+  syslog(LOG_DEBUG, "Binding UDP socket to local port %d", config.bttracker_port);
+  if (bind(in_sock, in_addrinfo->ai_addr, in_addrinfo->ai_addrlen) == -1) {
     syslog(LOG_ERR, "Error in bind(). Exiting");
     exit(BT_EXIT_NETWORK_ERROR);
   }
 
-  syslog(LOG_DEBUG, "Starting connection purging thread");
-  purge_thread_data = (bt_connection_purge_data_t) {
-    .interrupted = false,
-    .table = &conn_table,
-    .connection_ttl = BT_ACTIVE_CONNECTION_TTL,
-    .purge_interval = BT_CONNECTION_PURGE_INTERVAL
-  };
-  pthread_create(&connection_purge_thread, NULL, bt_clear_old_connections,
-                 &purge_thread_data);
-
   while (true) {
     char buff[BT_RECV_BUFLEN];
 
-    if (recvfrom(sock, buff, BT_RECV_BUFLEN, 0, (struct sockaddr *) &si_other,
-                 &other_len) == -1) {
+    if (recvfrom(in_sock, buff, BT_RECV_BUFLEN, 0,
+                 (struct sockaddr *) &si_other, &other_len) == -1) {
       syslog(LOG_ERR, "Error in recvfrom(). Exiting");
       exit(BT_EXIT_NETWORK_ERROR);
     }
@@ -104,44 +98,40 @@ int main(int argc, char *argv[]) {
     /* Get basic request data. */
     bt_req_t *request = (bt_req_t *) buff;
 
-    /* Pointer to response data object and its length. */
-    void *response_data;
-    int response_len = -1;
-
-    /* Pointer to a function that knows how to free `response_data`. */
-    void (*response_free)(void *);
+    /* Data to be sent to the client. */
+    bt_response_buffer_t *resp_buffer = NULL;
 
     /* Convert numbers from network byte order to host byte order. */
-    bt_req_from_network(request);
+    bt_req_to_host(request);
 
-    syslog(LOG_DEBUG, "Datagram received. Action = %" PRId32
+    /* Get the printable IPv4 address from the socket. */
+    char ipv4_str[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &si_other.sin_addr, ipv4_str, INET_ADDRSTRLEN);
+
+    syslog(LOG_DEBUG, "Datagram received from %s:%d. Action = %" PRId32
            ", Connection ID = %" PRId64 ", Transaction ID = %" PRId32,
-           request->action, request->connection_id, request->transaction_id);
+           ipv4_str, ntohs(si_other.sin_port), request->action,
+           request->connection_id, request->transaction_id);
 
     /* Dispatch the request to the appropriate handler function. */
     if (request->action == BT_ACTION_CONNECT) {
-      response_free = bt_free_connection_response;
-      response_data = malloc(sizeof(bt_connection_resp_t));
-
-      if (response_data == NULL) {
-        syslog(LOG_ERR, "Cannot allocate memory for connection response object");
-        exit(BT_EXIT_MALLOC_ERROR);
-      }
-
-      response_len = bt_handle_connection(request, response_data, &conn_table);
+      resp_buffer = bt_handle_connection(request, &config, redis);
+    } else if (request->action == BT_ACTION_ANNOUNCE) {
+      resp_buffer = bt_handle_announce(request, &config, &si_other, redis);
     }
 
-    if (response_len >= 0) {
+    if (resp_buffer != NULL) {
       syslog(LOG_DEBUG, "Sending response to matching Transaction ID %" PRId32,
              request->transaction_id);
 
-      if (sendto(sock, response_data, response_len, 0,
+      if (sendto(in_sock, resp_buffer->data, resp_buffer->length, 0,
                  (struct sockaddr *) &si_other, other_len) == -1) {
         syslog(LOG_ERR, "Error in sendto()");
       }
 
-      /* Destroys response data using the appropriate function. */
-      response_free(response_data);
+      /* Destroys response data. */
+      free(resp_buffer->data);
+      free(resp_buffer);
     }
   }
 }
@@ -149,15 +139,12 @@ int main(int argc, char *argv[]) {
 void on_sigint(int signum) {
   syslog(LOG_DEBUG, "Freeing resources");
 
-  /* Interrupt connection purging thread. */
-  purge_thread_data.interrupted = true;
-  pthread_join(connection_purge_thread, NULL);
-
-  /* Destroy connection hash table. */
-  bt_free_concurrent_hashtable(&conn_table);
+  /* Closes the connection with Redis. */
+  redisFree(redis);
 
   /* Close UDP socket. */
-  close(sock);
+  freeaddrinfo(in_addrinfo);
+  close(in_sock);
 
   syslog(LOG_INFO, "Exiting");
   closelog();

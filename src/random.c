@@ -45,3 +45,8 @@ int64_t bt_random_int64(void) {
 
   return ran;
 }
+
+uint32_t randr(uint32_t min, uint32_t max) {
+  double scaled = (double)rand()/RAND_MAX;
+  return (max - min +1)*scaled + min;
+}

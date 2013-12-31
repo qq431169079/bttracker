@@ -28,17 +28,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-int64_t bt_current_timestamp() {
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
+#ifndef BTTRACKER_ANNOUNCE_H_
+#define BTTRACKER_ANNOUNCE_H_
 
-  return tv.tv_sec;
-}
+/* Returns the response data to a announce request. */
+bt_response_buffer_t *bt_handle_announce(bt_req_t *request, bt_config_t *config, struct sockaddr_in *client_addr, redisContext *redis);
 
-bool bt_now_expired(int64_t ts, int64_t ttl) {
-  return bt_expired(ts, bt_current_timestamp(), ttl);
-}
-
-bool bt_expired(int64_t ts_begin, int64_t ts_end, int64_t ttl) {
-  return abs(ts_begin - ts_end) >= ttl;
-}
+#endif // BTTRACKER_ANNOUNCE_H_

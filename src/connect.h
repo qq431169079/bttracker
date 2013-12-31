@@ -32,44 +32,15 @@
 #define BTTRACKER_CONNECT_H_
 
 /* Interval, in seconds, in which a connection ID is considered active. */
-#define BT_ACTIVE_CONNECTION_TTL 120
+#define BT_ACTIVE_CONNECTION_TTL (uint8_t) 120
 
-/* Interval, in seconds, in which inactive connections will be purged. */
-#define BT_CONNECTION_PURGE_INTERVAL 10
-
-/* Object used as input to the connection purging thread. */
-typedef struct {
-  bool interrupted;                 // Whether it should be interrupted.
-  bt_concurrent_hashtable_t *table; // Active connections so far.
-  int connection_ttl;               // Connection is valid for that many seconds.
-  int purge_interval;               // Purging interval, in seconds.
-} bt_connection_purge_data_t;
-
-/* Creates a new hash table to store active connection IDs. */
-bt_hash_table_t *bt_new_connection_table();
-
-/* Adds a new connection ID to the hash table of active connections. */
-void bt_add_connection(bt_hash_table_t *table, int64_t connection_id);
-
-/* Returns whether the incoming connection request should be accepted. */
-bool bt_valid_request(bt_hash_table_t *table, const bt_req_t *req);
-
-/* Destroys a connection response object. */
-void bt_free_connection_response(void *resp);
-
-/*
- * Function that handles an incoming connection request. If the given request
- * is a valid connection request, the connection will be added to the table
- * and the function will output the response data to pointer `out` and return
- * the response length.
- */
-int bt_handle_connection(bt_req_t *request, bt_connection_resp_t *out,
-                         bt_concurrent_hashtable_t *table);
+/* Returns the response data to a connection request. */
+bt_response_buffer_t *bt_handle_connection(bt_req_t *request, bt_config_t *config, redisContext *redis);
 
 /*
  * Thread that purges all connections older than 2 minutes. The argument `data`
  * is a pointer to a `bt_connection_purge_data_t` object.
  */
-void *bt_clear_old_connections(void *data);
+void *bt_remove_old_connections_thread(void *data);
 
 #endif // BTTRACKER_CONNECT_H_

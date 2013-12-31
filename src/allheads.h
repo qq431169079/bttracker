@@ -72,19 +72,26 @@
 #include <netinet/in.h>
 #endif
 
+#ifdef HAVE_NETDB_H
+#include <netdb.h>
+#endif
+
 #ifdef HAVE_PTHREAD
 #include <pthread.h>
 #endif
 
+/* Library headers. */
 #include <glib.h>
+#include <hiredis/hiredis.h>
 
 /* Application headers. */
 #include "byteorder.h"
 #include "random.h"
-#include "data.h"
 #include "net.h"
-#include "ttl.h"
+#include "data.h"
 #include "connect.h"
+#include "handshake.h"
+#include "announce.h"
 #include "exit.h"
 
 #endif // BTTRACKER_ALLHEADS_H_

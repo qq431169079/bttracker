@@ -33,9 +33,11 @@
 
 /* Exit codes. */
 typedef enum {
-  BT_EXIT_OK,
-  BT_EXIT_NETWORK_ERROR,
-  BT_EXIT_MALLOC_ERROR
+  BT_EXIT_OK,            // Normal exit.
+  BT_EXIT_CONFIG_ERROR,  // Error when trying to load the config file.
+  BT_EXIT_NETWORK_ERROR, // Network communication errors.
+  BT_EXIT_MALLOC_ERROR,  // Memory allocation errors.
+  BT_EXIT_REDIS          // Redis failure.
 } bt_exit;
 
 #endif // BTTRACKER_EXIT_H_
