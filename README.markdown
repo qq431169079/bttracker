@@ -12,7 +12,7 @@ This code is known to compile and run on Linux (tested on ArchLinux and Ubuntu).
 ### Features
 
 * Stores data on Redis (convenience and performance :-)
-* Configurable via .cfg file
+* Configurable via `.conf` file
 * Syslog integration with detailed logging (debug mode)
 
 ### Current Status
