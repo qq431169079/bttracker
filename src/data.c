@@ -93,6 +93,12 @@ redisContext *bt_redis_connect(const char *host, int port, long timeout, int db)
   } else {
     syslog(LOG_DEBUG, "Connection with Redis instance established");
 
+    #if HIREDIS_MAJOR == 0 && HIREDIS_MINOR > 10
+    if (redisEnableKeepAlive(conn) == REDIS_OK) {
+      syslog(LOG_DEBUG, "Redis keepalive enabled");
+    }
+    #endif
+
     reply = redisCommand(conn, "SELECT %d", db);
     if (reply != NULL) {
       freeReplyObject(reply);
