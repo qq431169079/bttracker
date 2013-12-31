@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/danielfm/bttracker.png?branch=master)](https://travis-ci.org/danielfm/bttracker)
 
 BtTracker is a [BEP-15](http://www.bittorrent.org/beps/bep_0015.html) (UDP
-Tracker Protocol for BitTorrent) implementation in C for learning purposes.
+Tracker Protocol for BitTorrent) implementation in C.
 
 ## Supported Platforms
 
