@@ -13,7 +13,10 @@ Tracker Protocol for BitTorrent) implementation in C.
 
 ## Supported Platforms
 
-This code is known to compile and run on Linux (tested on ArchLinux and Ubuntu).
+This code is known to compile and run on the following operating systems:
+
+* Linux (tested on ArchLinux and Ubuntu)
+* Mac OS X 10.8+ (with [Homebrew](http://brew.sh/))
 
 ### Current Status
 
