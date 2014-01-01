@@ -316,11 +316,11 @@ bt_list_t *bt_peer_list(redisContext *redis, const bt_config_t *config,
   }
 
   if (reply->type == REDIS_REPLY_ARRAY) {
-    int i;
     size_t total_keys = reply->elements;
+    int i, upper_index = total_keys > num_want ? num_want : total_keys;
 
     /* Shuffles the keys a little bit to ensure all peers have a chance. */
-    for (i = 0; i < total_keys; i++) {
+    for (i = 0; i < upper_index; i++) {
       redisReply *aux = (redisReply *) reply->element[i];
       int j = randr(i, total_keys-1);
 
@@ -329,7 +329,7 @@ bt_list_t *bt_peer_list(redisContext *redis, const bt_config_t *config,
     }
 
     /* Pipelines the GET commands for all keys. */
-    for (i = 0; i < total_keys; i++) {
+    for (i = 0; i < upper_index; i++) {
       redisAppendCommand(redis, "GET %b", reply->element[i]->str,
                          reply->element[i]->len);
     }
@@ -337,7 +337,7 @@ bt_list_t *bt_peer_list(redisContext *redis, const bt_config_t *config,
     freeReplyObject(reply);
 
     /* Now we get the peer data stored under each key. */
-    for (i = 0; i < total_keys; i++) {
+    for (i = 0; i < upper_index; i++) {
 
       /* Extracts the peer address and appends it to the list. */
       if (redisGetReply(redis, (void **) &reply) == REDIS_OK) {
@@ -348,9 +348,7 @@ bt_list_t *bt_peer_list(redisContext *redis, const bt_config_t *config,
         freeReplyObject(reply);
 
         list = g_list_prepend(list, addr);
-        if (count++ == num_want) {
-          break;
-        }
+        count++;
       } else {
         syslog(LOG_INFO, "Unable to get peer data");
       }
