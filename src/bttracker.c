@@ -151,7 +151,9 @@ void on_sigint(int signum) {
   syslog(LOG_DEBUG, "Freeing resources");
 
   /* Closes the connection with Redis. */
-  redisFree(redis);
+  if (redis != NULL) {
+    redisFree(redis);
+  }
 
   /* Close UDP socket. */
   freeaddrinfo(in_addrinfo);
