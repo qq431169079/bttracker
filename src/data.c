@@ -103,6 +103,20 @@ redisContext *bt_redis_connect(const char *host, int port, long timeout, int db)
   return conn;
 }
 
+bool bt_redis_ping(redisContext *redis) {
+  bool ok = false;
+  redisReply *reply;
+
+  reply = redisCommand(redis, "PING");
+
+  if (reply != NULL) {
+    ok = reply->type != REDIS_REPLY_ERROR;
+    freeReplyObject(reply);
+  }
+
+  return ok;
+}
+
 void bt_insert_connection(redisContext *redis, const bt_config_t *config,
                           int64_t connection_id) {
   redisReply *reply;
@@ -138,7 +152,7 @@ bool bt_connection_valid(redisContext *redis, const bt_config_t *config,
     return false;
   }
 
-  valid = (strcmp(reply->str, "1") == 0);
+  valid = reply->type != REDIS_REPLY_ERROR;
 
   freeReplyObject(reply);
   return valid;

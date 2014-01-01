@@ -66,9 +66,6 @@ int main(int argc, char *argv[]) {
     setlogmask(LOG_UPTO(LOG_DEBUG));
   }
 
-  /* Connects to a Redis instance where the data should be stored. */
-  redis = bt_redis_connect(config.redis_host, config.redis_port, config.redis_timeout * 1000, config.redis_db);
-
   /* Handle interruption signal (C-c on term). */
   signal(SIGINT, on_sigint);
 
@@ -87,12 +84,26 @@ int main(int argc, char *argv[]) {
   }
 
   while (true) {
+    int redis_timeout = config.redis_timeout * 1000;
     char buff[BT_RECV_BUFLEN];
 
     if (recvfrom(in_sock, buff, BT_RECV_BUFLEN, 0,
                  (struct sockaddr *) &si_other, &other_len) == -1) {
       syslog(LOG_ERR, "Error in recvfrom(). Exiting");
       exit(BT_EXIT_NETWORK_ERROR);
+    }
+
+    /* Connects to the Redis instance where the data should be stored. */
+    if (!redis) {
+      redis = bt_redis_connect(config.redis_host, config.redis_port, redis_timeout, config.redis_db);
+    } else {
+      /* Checks whether the connection is still alive; reconnect if it's not. */
+      if (!bt_redis_ping(redis)) {
+        syslog(LOG_INFO, "Redis ping failed. Trying to reconnect");
+
+        redisFree(redis);
+        redis = bt_redis_connect(config.redis_host, config.redis_port, redis_timeout, config.redis_db);
+      }
     }
 
     /* Get basic request data. */

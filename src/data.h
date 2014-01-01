@@ -78,6 +78,9 @@ bool bt_load_config(const char *filename, bt_config_t *config);
 /* Connects to the specified redis instance. */
 redisContext *bt_redis_connect(const char *host, int port, long timeout, int db);
 
+/* Pings the Redis instance and returns true if it everything's okay. */
+bool bt_redis_ping(redisContext *redis);
+
 
 /*
  * Connections.
