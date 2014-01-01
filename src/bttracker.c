@@ -46,6 +46,12 @@ int main(int argc, char *argv[]) {
   /* Seed the pseudo-random number generator. */
   srand(time(NULL));
 
+  /* Default logging level. */
+  setlogmask(LOG_UPTO(LOG_INFO));
+
+  openlog(PACKAGE, LOG_PID | LOG_PERROR | LOG_CONS, LOG_LOCAL0);
+  syslog(LOG_INFO, "Welcome to %s, version %s", PACKAGE_NAME, PACKAGE_VERSION);
+
   if (argc != 2) {
     syslog(LOG_ERR, "Please specify the configuration file. Usage: %s <config_file>", PACKAGE_NAME);
     exit(BT_EXIT_CONFIG_ERROR);
@@ -56,15 +62,9 @@ int main(int argc, char *argv[]) {
     exit(BT_EXIT_CONFIG_ERROR);
   }
 
-  /* Default logging level. */
-  setlogmask(LOG_UPTO(LOG_INFO));
-
   if (config.bttracker_debug_mode) {
     setlogmask(LOG_UPTO(LOG_DEBUG));
   }
-
-  openlog(PACKAGE, LOG_PID | LOG_PERROR | LOG_CONS, LOG_LOCAL0);
-  syslog(LOG_INFO, "Welcome to %s, version %s", PACKAGE_NAME, PACKAGE_VERSION);
 
   /* Connects to a Redis instance where the data should be stored. */
   redis = bt_redis_connect(config.redis_host, config.redis_port, config.redis_timeout * 1000, config.redis_db);
