@@ -55,19 +55,99 @@ typedef struct {
   char *redis_key_prefix;
 } bt_config_t;
 
+/* Fields common to all types of requests. */
+#define _BT_REQUEST_HEADER_  \
+  int64_t connection_id;     \
+  bt_action action;          \
+  int32_t transaction_id;
+
+/* Fields common to all types of responses. */
+#define _BT_RESPONSE_HEADER_ \
+  bt_action action;          \
+  int32_t transaction_id;
+
+/* Types of requests. */
+typedef enum {
+  BT_ACTION_CONNECT  = 0,
+  BT_ACTION_ANNOUNCE = 1,
+  BT_ACTION_SCRAPE   = 2,
+  BT_ACTION_ERROR    = 3
+} bt_action;
+
+/* Types of announce events. */
+typedef enum {
+  BT_EVENT_NONE      = 0,
+  BT_EVENT_COMPLETED = 1,
+  BT_EVENT_STARTED   = 2,
+  BT_EVENT_STOPPED   = 3
+} bt_announce_event;
+
+/* Object that contains fields common to all types of requests. */
+typedef struct {
+  _BT_REQUEST_HEADER_
+} bt_req_t;
+
+/* Object that contains fields common to all types of responses. */
+typedef struct {
+  _BT_RESPONSE_HEADER_
+} bt_resp_t;
+
+/* Data sent to the client in response to a connection request. */
+typedef struct {
+  _BT_RESPONSE_HEADER_
+  int64_t connection_id;
+} bt_connection_resp_t;
+
+/* Data sent by the client when it's announcing itself. */
+typedef struct {
+  _BT_REQUEST_HEADER_
+  uint32_t ipv4_addr;
+  uint16_t port;
+  int8_t info_hash[20];
+  int8_t peer_id[20];
+  int64_t downloaded;
+  int64_t left;
+  int64_t uploaded;
+  int32_t key;
+  int32_t num_want;
+  bt_announce_event event;
+} bt_announce_req_t;
+
+/* Data sent to the client in response to an announce request. */
+typedef struct {
+  _BT_RESPONSE_HEADER_
+  int32_t interval;
+  int32_t leechers;
+  int32_t seeders;
+} bt_announce_resp_t;
+
+/* Peer address. */
+typedef struct {
+  int32_t ipv4_addr;
+  uint16_t port;
+} bt_peer_addr_t;
+
+/* Object that holds serialized data to be transmitted over the wire. */
+typedef struct {
+  size_t length;
+  char *data;
+} bt_response_buffer_t;
+
 /* Peer information. */
 typedef struct {
   int32_t key;        // Random key sent by the client
+  uint32_t ipv4_addr; // Peer IPv4 address
   int64_t downloaded; // Number of bytes downloaded so far
   int64_t uploaded;   // Number of bytes uploaded so far
   int64_t left;       // Number of bytes left to be downloaded
   uint16_t port;      // Peer port
-  uint32_t ipv4_addr; // Peer IPv4 address
 } bt_peer_t;
 
 /*
  * Configuration.
  */
+
+/* Loads configuration file to a `bt_config_t` object. */
 bool bt_load_config(const char *filename, bt_config_t *config);
 
 

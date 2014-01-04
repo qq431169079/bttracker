@@ -29,22 +29,18 @@
  */
 
 bt_response_buffer_t *bt_serialize_connection_response(bt_connection_resp_t *response_data) {
-  size_t resp_length = 16;
-  bt_response_buffer_t *resp_buffer = (bt_response_buffer_t *) malloc(resp_length);
+  bt_response_buffer_t *resp_buffer = (bt_response_buffer_t *) malloc(sizeof(bt_response_buffer_t));
 
   if (resp_buffer == NULL) {
     syslog(LOG_ERR, "Cannot allocate memory for response buffer");
     exit(BT_EXIT_MALLOC_ERROR);
   }
 
-  /* Convert the response data to network byte order. */
-  bt_connection_resp_to_network(response_data);
+  /* Serializes the response. */
+  resp_buffer->length = 16;
+  resp_buffer->data = (char *) malloc(resp_buffer->length);
 
-  /* Fills the response buffer object. */
-  resp_buffer->length = resp_length;
-  resp_buffer->data = malloc(resp_length);
-
-  memcpy(resp_buffer->data, response_data, resp_buffer->length);
+  bt_write_connection_data(resp_buffer->data, response_data);
 
   return resp_buffer;
 }

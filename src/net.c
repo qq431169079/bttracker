@@ -28,9 +28,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Prepares a `bt_req` object to be sent over the wire. */
-void bt_resp_to_network(bt_resp_t *resp);
-
 int bt_ipv4_udp_sock(uint16_t port, struct addrinfo **addrinfo) {
   struct addrinfo hints = {
     .ai_family = AF_INET,      // IPv4
@@ -47,7 +44,8 @@ int bt_ipv4_udp_sock(uint16_t port, struct addrinfo **addrinfo) {
   }
 
   int sock;
-  if ((sock = socket((*addrinfo)->ai_family, (*addrinfo)->ai_socktype, (*addrinfo)->ai_protocol)) == -1) {
+  if ((sock = socket((*addrinfo)->ai_family, (*addrinfo)->ai_socktype,
+                     (*addrinfo)->ai_protocol)) == -1) {
     syslog(LOG_ERR, "Cannot create socket. Exiting");
     exit(BT_EXIT_NETWORK_ERROR);
   }
@@ -55,52 +53,77 @@ int bt_ipv4_udp_sock(uint16_t port, struct addrinfo **addrinfo) {
   return sock;
 }
 
-void bt_req_to_host(bt_req_t *req) {
-  req->connection_id = ntohll(req->connection_id);
-  req->action = ntohl(req->action);
-  req->transaction_id = ntohl(req->transaction_id);
+void bt_read_request_data(const char *buffer, bt_req_t *req) {
+  req->connection_id = ntohll(*((int64_t *) buffer));
+  req->action = ntohl(*((int32_t *)(buffer+8)));
+  req->transaction_id = ntohl(*((int32_t *) (buffer+12)));
 }
 
-void bt_resp_to_network(bt_resp_t *resp) {
+void bt_write_connection_data(char *resp_buffer, bt_connection_resp_t *resp) {
+
+  /* Converts the response data to network byte order. */
   resp->action = htonl(resp->action);
   resp->transaction_id = htonl(resp->transaction_id);
-}
-
-void bt_connection_resp_to_network(bt_connection_resp_t *resp) {
-  bt_resp_to_network((bt_resp_t *) resp);
-
   resp->connection_id = htonll(resp->connection_id);
+
+  /* Writes each field of the connection response. */
+  memcpy(resp_buffer,     &resp->action, 4);
+  memcpy(resp_buffer + 4, &resp->transaction_id, 4);
+  memcpy(resp_buffer + 8, &resp->connection_id, 8);
 }
 
-void bt_announce_req_to_host(bt_announce_req_t *req) {
+void bt_read_announce_request_data(const char *buffer, bt_announce_req_t *req) {
 
-  // Not needed to convert the basic request fields; they are converted before
-  // the request is handled.
-  // bt_req_to_host((bt_req_t *) req);
+  /* Array of bytes do not need conversion. */
+  memcpy(&req->info_hash, buffer+16, 20);
+  memcpy(&req->peer_id, buffer+36, 20);
 
-  // Not needed to convert these fields, as they are not multibyte numbers
-  // req->info_hash
-  // req->peer_id
-
-  req->downloaded = ntohll(req->downloaded);
-  req->left = ntohll(req->left);
-  req->uploaded = ntohll(req->uploaded);
-  req->event = ntohl(req->event);
-  req->ipv4_addr = ntohl(req->ipv4_addr);
-  req->key = ntohl(req->key);
-  req->num_want = ntohl(req->num_want);
-  req->port = ntohs(req->port);
+  /* Converts data to host byte order. */
+  req->connection_id = ntohll(*((int64_t *) buffer));
+  req->action = ntohl(*((int32_t *)(buffer+8)));
+  req->transaction_id = ntohl(*((int32_t *) (buffer+12)));
+  req->downloaded = ntohll(*((int64_t *) (buffer+56)));
+  req->left = ntohll(*((int64_t *) (buffer+64)));
+  req->uploaded = ntohll(*((int64_t *) (buffer+72)));
+  req->event = ntohl(*((int32_t *) (buffer+80)));
+  req->ipv4_addr = ntohl(*((uint32_t *) (buffer+84)));
+  req->key = ntohl(*((int32_t *) (buffer+88)));
+  req->num_want = ntohl(*((int32_t *) (buffer+92)));
+  req->port = ntohs(*((uint16_t *) (buffer+96)));
 }
 
-void bt_announce_resp_to_network(bt_announce_resp_t *resp) {
-  bt_resp_to_network((bt_resp_t *) resp);
+void bt_write_announce_response_data(char *resp_buffer, bt_announce_resp_t *resp) {
 
+  /* Converts data to network byte order. */
+  resp->action = htonl(resp->action);
+  resp->transaction_id = htonl(resp->transaction_id);
   resp->interval = htonl(resp->interval);
   resp->leechers = htonl(resp->leechers);
   resp->seeders = htonl(resp->seeders);
+
+  /* Writes each field of the announce response. */
+  memcpy(resp_buffer,      &resp->action, 4);
+  memcpy(resp_buffer +  4, &resp->transaction_id, 4);
+  memcpy(resp_buffer +  8, &resp->interval, 4);
+  memcpy(resp_buffer + 12, &resp->leechers, 4);
+  memcpy(resp_buffer + 16, &resp->seeders, 4);
 }
 
-void bt_announce_peer_addr_to_network(bt_peer_addr_t *peer_addr) {
-  peer_addr->ipv4_addr = htonl(peer_addr->ipv4_addr);
-  peer_addr->port = htons(peer_addr->port);
+void bt_write_announce_peer_data(char *resp_buffer, bt_list_t *peers) {
+  bt_list_t *current_peer = peers;
+  int npeer = 0;
+
+  while (current_peer != NULL) {
+    bt_peer_addr_t *peer_addr = current_peer->data;
+
+    /* Converts data to network byte order. */
+    peer_addr->ipv4_addr = htonl(peer_addr->ipv4_addr);
+    peer_addr->port = htons(peer_addr->port);
+
+    /* Writes the address for each peer in the response buffer. */
+    memcpy(resp_buffer + 20 + 6 * npeer, &peer_addr->ipv4_addr, 4);
+    memcpy(resp_buffer + 24 + 6 * npeer++, &peer_addr->port, 2);
+
+    current_peer = g_list_next(current_peer);
+  }
 }

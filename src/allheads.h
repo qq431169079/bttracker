@@ -87,8 +87,8 @@
 /* Application headers. */
 #include "byteorder.h"
 #include "random.h"
-#include "net.h"
 #include "data.h"
+#include "net.h"
 #include "connect.h"
 #include "handshake.h"
 #include "announce.h"

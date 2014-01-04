@@ -95,25 +95,27 @@ int main(int argc, char *argv[]) {
 
     /* Connects to the Redis instance where the data should be stored. */
     if (!redis) {
-      redis = bt_redis_connect(config.redis_host, config.redis_port, redis_timeout, config.redis_db);
+      redis = bt_redis_connect(config.redis_host, config.redis_port,
+                               redis_timeout, config.redis_db);
     } else {
       /* Checks whether the connection is still alive; reconnect if it's not. */
       if (!bt_redis_ping(redis)) {
         syslog(LOG_INFO, "Redis ping failed. Trying to reconnect");
 
         redisFree(redis);
-        redis = bt_redis_connect(config.redis_host, config.redis_port, redis_timeout, config.redis_db);
+        redis = bt_redis_connect(config.redis_host, config.redis_port,
+                                 redis_timeout, config.redis_db);
       }
     }
-
-    /* Get basic request data. */
-    bt_req_t *request = (bt_req_t *) buff;
 
     /* Data to be sent to the client. */
     bt_response_buffer_t *resp_buffer = NULL;
 
-    /* Convert numbers from network byte order to host byte order. */
-    bt_req_to_host(request);
+    /* Basic request data. */
+    bt_req_t request;
+
+    /* Fills object with data in buffer. */
+    bt_read_request_data(buff, &request);
 
     /* Get the printable IPv4 address from the socket. */
     char ipv4_str[INET_ADDRSTRLEN];
@@ -121,20 +123,26 @@ int main(int argc, char *argv[]) {
 
     syslog(LOG_DEBUG, "Datagram received from %s:%d. Action = %" PRId32
            ", Connection ID = %" PRId64 ", Transaction ID = %" PRId32,
-           ipv4_str, ntohs(si_other.sin_port), request->action,
-           request->connection_id, request->transaction_id);
+           ipv4_str, ntohs(si_other.sin_port), request.action,
+           request.connection_id, request.transaction_id);
 
-    /* Dispatch the request to the appropriate handler function. */
-    if (request->action == BT_ACTION_CONNECT) {
-      resp_buffer = bt_handle_connection(request, &config, redis);
-    } else if (request->action == BT_ACTION_ANNOUNCE) {
-      resp_buffer = bt_handle_announce(request, &config, &si_other, redis);
+    /* Dispatches the request to the appropriate handler function. */
+    switch (request.action) {
+    case BT_ACTION_CONNECT:
+      resp_buffer = bt_handle_connection(&request, &config, redis);
+      break;
+
+    case BT_ACTION_ANNOUNCE:
+      resp_buffer = bt_handle_announce(&request, &config, buff, &si_other, redis);
+      break;
+
+    case BT_ACTION_SCRAPE:
+    default:
+      break;
     }
 
     if (resp_buffer != NULL) {
-      syslog(LOG_DEBUG, "Sending response to matching Transaction ID %" PRId32,
-             request->transaction_id);
-
+      syslog(LOG_DEBUG, "Sending response back to the client");
       if (sendto(in_sock, resp_buffer->data, resp_buffer->length, 0,
                  (struct sockaddr *) &si_other, other_len) == -1) {
         syslog(LOG_ERR, "Error in sendto()");
