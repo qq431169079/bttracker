@@ -31,7 +31,7 @@
 #ifndef BTTRACKER_POOL_H_
 #define BTTRACKER_POOL_H_
 
-/* TODO. */
+/* Request raw data. */
 typedef struct {
   char *buff;
   int sock;
@@ -39,7 +39,7 @@ typedef struct {
   size_t from_addr_len;
 } bt_job_params_t;
 
+/* Creates a new thread pool to answer the incoming requests. */
 GThreadPool *bt_new_request_processor_pool(bt_config_t *config);
-
 
 #endif // BTTRACKER_POOL_H_

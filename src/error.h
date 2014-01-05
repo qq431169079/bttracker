@@ -28,34 +28,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BTTRACKER_NET_H_
-#define BTTRACKER_NET_H_
+#ifndef BTTRACKER_ERROR_H_
+#define BTTRACKER_ERROR_H_
 
-/* Buffer length used to receive data from clients. */
-#define BT_RECV_BUFLEN 1024
+/* Returns the response data to a announce request. */
+bt_response_buffer_t *bt_send_error(bt_req_t *request, const char *msg);
 
-/* 64-bit integer that identifies the UDP-based tracker protocol. */
-#define BT_PROTOCOL_ID 0x41727101980LL
-
-/* Fills request struct with buffer data. */
-void bt_read_request_data(const char *buffer, bt_req_t *req);
-
-/* Writes the error response data to an output buffer. */
-void bt_write_error_data(char *resp_buffer, bt_req_t *req, const char* msg);
-
-/* Writes the connection response data to an output buffer. */
-void bt_write_connection_data(char *buffer, bt_connection_resp_t *resp);
-
-/* Fills the announce request with buffer data. */
-void bt_read_announce_request_data(const char *buffer, bt_announce_req_t *req);
-
-/* Writes the announce response data to an output buffer. */
-void bt_write_announce_response_data(char *resp_buffer, bt_announce_resp_t *resp);
-
-/* Writes the peer data to be sent along the announce response. */
-void bt_write_announce_peer_data(char *resp_buffer, bt_list_t *peers);
-
-/* Fills a `struct addrinfo` and returns a corresponding UDP socket. */
-int bt_ipv4_udp_sock(uint16_t port, struct addrinfo **addrinfo);
-
-#endif // BTTRACKER_NET_H_
+#endif // BTTRACKER_ERROR_H_

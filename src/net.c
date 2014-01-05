@@ -59,6 +59,19 @@ void bt_read_request_data(const char *buffer, bt_req_t *req) {
   req->transaction_id = ntohl(*((int32_t *) (buffer+12)));
 }
 
+void bt_write_error_data(char *resp_buffer, bt_req_t *req, const char* msg) {
+
+  /* Converts the response data to network byte order. */
+  req->connection_id = htonll(req->connection_id);
+  req->action = htonl(req->action);
+  req->transaction_id = htonl(req->transaction_id);
+
+  /* Writes each field of the error response. */
+  memcpy(resp_buffer,     &req->action, 4);
+  memcpy(resp_buffer + 4, &req->transaction_id, 4);
+  memcpy(resp_buffer + 8, msg, strlen(msg) + 1);
+}
+
 void bt_write_connection_data(char *resp_buffer, bt_connection_resp_t *resp) {
 
   /* Converts the response data to network byte order. */

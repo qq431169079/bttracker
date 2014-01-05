@@ -89,6 +89,7 @@
 #include "random.h"
 #include "data.h"
 #include "net.h"
+#include "error.h"
 #include "connect.h"
 #include "handshake.h"
 #include "announce.h"

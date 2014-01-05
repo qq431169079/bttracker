@@ -29,27 +29,12 @@
  */
 
 void bt_free_redis(void *redis) {
-  syslog(LOG_DEBUG, "Destroying idle thread");
+  syslog(LOG_DEBUG, "Disconnecting from Redis");
   redisFree((redisContext *) redis);
 }
 
 void bt_request_processor(void *job_params, void *pool_params) {
   static GPrivate redis_key = G_PRIVATE_INIT(bt_free_redis);
-
-  bt_job_params_t *params = (bt_job_params_t *) job_params;
-  bt_config_t *config = (bt_config_t *) pool_params;
-
-  redisContext *redis = g_private_get(&redis_key);
-  int redis_timeout = config->redis_timeout * 1000;
-
-  /* Connects to the Redis instance where the data should be stored. */
-  if (!redis) {
-    redis = bt_redis_connect(config->redis_host, config->redis_port,
-                             redis_timeout, config->redis_db);
-
-    /* Stores the new redis context in thread local storage. */
-    g_private_set(&redis_key, redis);
-  }
 
   /* Data to be sent to the client. */
   bt_response_buffer_t *resp_buffer = NULL;
@@ -57,8 +42,38 @@ void bt_request_processor(void *job_params, void *pool_params) {
   /* Basic request data. */
   bt_req_t request;
 
+  /* Message to be sent to the client in case of error. */
+  char *error = NULL;
+
+  /* Cast parameters to their correct types. */
+  bt_job_params_t *params = (bt_job_params_t *) job_params;
+  bt_config_t *config = (bt_config_t *) pool_params;
+
   /* Fills object with data in buffer. */
   bt_read_request_data(params->buff, &request);
+
+  int redis_timeout = config->redis_timeout * 1000;
+  redisContext *redis = g_private_get(&redis_key);
+
+  /* Connects to the Redis instance where the data should be stored. */
+  if (!redis) {
+  redis_connect:
+    redis = bt_redis_connect(config->redis_host, config->redis_port,
+                             redis_timeout, config->redis_db);
+
+    /* Cannot connect, answer this request with an error. */
+    if (!redis) {
+      error = "Tracker temporarily unavailable: data storage is not working";
+      request.action = BT_ACTION_ERROR;
+    }
+
+    /* Stores the new redis context in thread local storage. */
+    g_private_replace(&redis_key, redis);
+  } else {
+    if (!bt_redis_ping(redis)) {
+      goto redis_connect;
+    }
+  }
 
   /* Dispatches the request to the appropriate handler function. */
   switch (request.action) {
@@ -71,9 +86,11 @@ void bt_request_processor(void *job_params, void *pool_params) {
     break;
 
   case BT_ACTION_SCRAPE:
-  default:
-
     /* Not supported yet. */
+    break;
+
+  case BT_ACTION_ERROR:
+    resp_buffer = bt_send_error(&request, error);
     break;
   }
 

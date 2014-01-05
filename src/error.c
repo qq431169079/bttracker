@@ -28,34 +28,24 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BTTRACKER_NET_H_
-#define BTTRACKER_NET_H_
+bt_response_buffer_t *bt_send_error(bt_req_t *request, const char *msg) {
+  bt_response_buffer_t *resp_buffer = (bt_response_buffer_t *) malloc(sizeof(bt_response_buffer_t));
 
-/* Buffer length used to receive data from clients. */
-#define BT_RECV_BUFLEN 1024
+  if (resp_buffer == NULL) {
+    syslog(LOG_ERR, "Cannot allocate memory for response object");
+    exit(BT_EXIT_MALLOC_ERROR);
+  }
 
-/* 64-bit integer that identifies the UDP-based tracker protocol. */
-#define BT_PROTOCOL_ID 0x41727101980LL
+  /* Serializes the response. */
+  resp_buffer->length = 64 + strlen(msg) + 1;
+  resp_buffer->data = (char *) malloc(resp_buffer->length);
 
-/* Fills request struct with buffer data. */
-void bt_read_request_data(const char *buffer, bt_req_t *req);
+  if (resp_buffer->data == NULL) {
+    syslog(LOG_ERR, "Cannot allocate memory for response buffer");
+    exit(BT_EXIT_MALLOC_ERROR);
+  }
 
-/* Writes the error response data to an output buffer. */
-void bt_write_error_data(char *resp_buffer, bt_req_t *req, const char* msg);
+  bt_write_error_data(resp_buffer->data, request, msg);
 
-/* Writes the connection response data to an output buffer. */
-void bt_write_connection_data(char *buffer, bt_connection_resp_t *resp);
-
-/* Fills the announce request with buffer data. */
-void bt_read_announce_request_data(const char *buffer, bt_announce_req_t *req);
-
-/* Writes the announce response data to an output buffer. */
-void bt_write_announce_response_data(char *resp_buffer, bt_announce_resp_t *resp);
-
-/* Writes the peer data to be sent along the announce response. */
-void bt_write_announce_peer_data(char *resp_buffer, bt_list_t *peers);
-
-/* Fills a `struct addrinfo` and returns a corresponding UDP socket. */
-int bt_ipv4_udp_sock(uint16_t port, struct addrinfo **addrinfo);
-
-#endif // BTTRACKER_NET_H_
+  return resp_buffer;
+}

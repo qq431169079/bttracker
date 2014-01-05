@@ -91,8 +91,8 @@ int main(int argc, char *argv[]) {
 
     if (recvfrom(in_sock, buff, BT_RECV_BUFLEN, 0,
                  (struct sockaddr *) &si_other, &other_len) == -1) {
-      syslog(LOG_ERR, "Error in recvfrom(). Exiting");
-      exit(BT_EXIT_NETWORK_ERROR);
+      syslog(LOG_ERR, "Cannot retrieve data from socket. Continuing");
+      continue;
     }
 
     char ipv4_str[INET_ADDRSTRLEN];

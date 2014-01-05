@@ -73,22 +73,25 @@ redisContext *bt_redis_connect(const char *host, int port, long timeout, int db)
   syslog(LOG_DEBUG, "Connecting to Redis instance at %s:%d[%d]", host, port, db);
   conn = redisConnectWithTimeout(host, port, timeout_val);
 
-  if (conn == NULL || conn->err) {
-    if (conn) {
-      syslog(LOG_ERR, "Connection error: %s", conn->errstr);
-      redisFree(conn);
-    } else {
-      syslog(LOG_ERR, "Connection error: can't allocate conn context");
-    }
-    exit(BT_EXIT_REDIS);
-  } else {
-    syslog(LOG_DEBUG, "Connection with Redis instance established");
+  if (conn == NULL) {
+    syslog(LOG_ERR, "Connection error: can't allocate conn context");
+    return NULL;
+  }
 
-    reply = redisCommand(conn, "SELECT %d", db);
-    if (reply != NULL) {
-      freeReplyObject(reply);
-      syslog(LOG_DEBUG, "Redis database switched to %d", db);
-    }
+  if (conn->err) {
+    syslog(LOG_ERR, "Connection error: %s", conn->errstr);
+    redisFree(conn);
+    return NULL;
+  }
+
+  syslog(LOG_DEBUG, "Connection with Redis instance established");
+
+  /* Switching to the configured database. */
+  reply = redisCommand(conn, "SELECT %d", db);
+
+  if (reply != NULL) {
+    freeReplyObject(reply);
+    syslog(LOG_DEBUG, "Redis database switched to %d", db);
   }
 
   return conn;
@@ -283,7 +286,6 @@ void bt_get_torrent_stats(redisContext *redis, const bt_config_t *config,
   if (redisGetReply(redis, (void **) &reply) == REDIS_OK) {
     stats->seeders = reply->elements;
   }
-
   if (reply != NULL) {
     freeReplyObject(reply);
   }
@@ -291,7 +293,6 @@ void bt_get_torrent_stats(redisContext *redis, const bt_config_t *config,
   if (redisGetReply(redis, (void **) &reply) == REDIS_OK) {
     stats->leechers = reply->elements;
   }
-
   if (reply != NULL) {
     freeReplyObject(reply);
   }
@@ -299,7 +300,6 @@ void bt_get_torrent_stats(redisContext *redis, const bt_config_t *config,
   if (redisGetReply(redis, (void **) &reply) == REDIS_OK) {
     stats->downloads = reply->integer;
   }
-
   if (reply != NULL) {
     freeReplyObject(reply);
   }
