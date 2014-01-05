@@ -274,7 +274,7 @@ int32_t bt_peer_count(redisContext *redis, const bt_config_t *config,
 
   if (reply == NULL) {
     syslog(LOG_ERR, "Got a NULL reply from Redis");
-    return;
+    return 0;
   }
 
   if (reply->type == REDIS_REPLY_ARRAY) {
