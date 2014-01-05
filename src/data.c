@@ -44,30 +44,21 @@ bool bt_load_config(const char *filename, bt_config_t *config) {
   }
 
   /* Fills the config data struct, one section at a time. */
-  config->bttracker_debug_mode = g_key_file_get_boolean(keyfile,
-                                                        "BtTracker", "DebugMode", NULL);
-  config->bttracker_port = g_key_file_get_integer(keyfile,
-                                                        "BtTracker", "Port", NULL);
-  config->bttracker_num_threads = g_key_file_get_integer(keyfile,
-                                                         "BtTracker", "NumThreads", NULL);
+  config->bttracker_debug_mode = g_key_file_get_boolean(keyfile, "BtTracker", "DebugMode", NULL);
+  config->bttracker_port       = g_key_file_get_integer(keyfile, "BtTracker", "Port", NULL);
 
-  config->announce_wait_time = g_key_file_get_integer(keyfile,
-                                                        "Announce", "WaitTime", NULL);
-  config->announce_peer_ttl = g_key_file_get_integer(keyfile,
-                                                        "Announce", "PeerTTL", NULL);
-  config->announce_max_numwant = g_key_file_get_integer(keyfile,
-                                                        "Announce", "MaxNumWant", NULL);
+  config->thread_max           = g_key_file_get_integer(keyfile, "Threading", "MaxThreads", NULL);
+  config->thread_max_idle_time = g_key_file_get_integer(keyfile, "Threading", "MaxIdleTime", NULL);
 
-  config->redis_host = g_key_file_get_string(keyfile,
-                                                   "Redis", "Host", NULL);
-  config->redis_port = g_key_file_get_integer(keyfile,
-                                                   "Redis", "Port", NULL);
-  config->redis_timeout = g_key_file_get_integer(keyfile,
-                                                   "Redis", "Timeout", NULL);
-  config->redis_db = g_key_file_get_integer(keyfile,
-                                                   "Redis", "DB", NULL);
-  config->redis_key_prefix = g_key_file_get_string(keyfile,
-                                                   "Redis", "KeyPrefix", NULL);
+  config->announce_wait_time   = g_key_file_get_integer(keyfile, "Announce", "WaitTime", NULL);
+  config->announce_peer_ttl    = g_key_file_get_integer(keyfile, "Announce", "PeerTTL", NULL);
+  config->announce_max_numwant = g_key_file_get_integer(keyfile, "Announce", "MaxNumWant", NULL);
+
+  config->redis_host       = g_key_file_get_string(keyfile,  "Redis", "Host", NULL);
+  config->redis_port       = g_key_file_get_integer(keyfile, "Redis", "Port", NULL);
+  config->redis_timeout    = g_key_file_get_integer(keyfile, "Redis", "Timeout", NULL);
+  config->redis_db         = g_key_file_get_integer(keyfile, "Redis", "DB", NULL);
+  config->redis_key_prefix = g_key_file_get_string(keyfile,  "Redis", "KeyPrefix", NULL);
 
   g_key_file_free(keyfile);
 
@@ -281,16 +272,18 @@ int32_t bt_peer_count(redisContext *redis, const bt_config_t *config,
   reply = redisCommand(redis, "KEYS %s:pr:%b:%s:*",
                        config->redis_key_prefix, info_hash, (size_t) 20, peer_prefix);
 
-  if (reply != NULL) {
-    if (reply->type == REDIS_REPLY_ARRAY) {
-      count = reply->elements;
-    } else {
-      syslog(LOG_ERR, "Cannot count peers");
-    }
-    freeReplyObject(reply);
-  } else {
+  if (reply == NULL) {
     syslog(LOG_ERR, "Got a NULL reply from Redis");
+    return;
   }
+
+  if (reply->type == REDIS_REPLY_ARRAY) {
+    count = reply->elements;
+  } else {
+    syslog(LOG_ERR, "Cannot count peers");
+  }
+
+  freeReplyObject(reply);
 
   return count;
 }

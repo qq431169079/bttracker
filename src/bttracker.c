@@ -28,11 +28,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Redis connection handler. */
-redisContext *redis;
-
 /* Configuration data. */
 bt_config_t config;
+
+/* Thread pool used to answer all requests. */
+GThreadPool *pool;
 
 /* Input socket descriptors. */
 int in_sock;
@@ -69,6 +69,9 @@ int main(int argc, char *argv[]) {
   /* Handle interruption signal (C-c on term). */
   signal(SIGINT, on_sigint);
 
+  /* Creates the thread pool. */
+  pool = bt_new_request_processor_pool(&config);
+
   /* Required by network communication code. */
   struct sockaddr_in si_other;
   socklen_t other_len = sizeof(si_other);
@@ -84,7 +87,6 @@ int main(int argc, char *argv[]) {
   }
 
   while (true) {
-    int redis_timeout = config.redis_timeout * 1000;
     char buff[BT_RECV_BUFLEN];
 
     if (recvfrom(in_sock, buff, BT_RECV_BUFLEN, 0,
@@ -93,84 +95,44 @@ int main(int argc, char *argv[]) {
       exit(BT_EXIT_NETWORK_ERROR);
     }
 
-    /* Connects to the Redis instance where the data should be stored. */
-    if (!redis) {
-      redis = bt_redis_connect(config.redis_host, config.redis_port,
-                               redis_timeout, config.redis_db);
-    } else {
-      /* Checks whether the connection is still alive; reconnect if it's not. */
-      if (!bt_redis_ping(redis)) {
-        syslog(LOG_INFO, "Redis ping failed. Trying to reconnect");
-
-        redisFree(redis);
-        redis = bt_redis_connect(config.redis_host, config.redis_port,
-                                 redis_timeout, config.redis_db);
-      }
-    }
-
-    /* Data to be sent to the client. */
-    bt_response_buffer_t *resp_buffer = NULL;
-
-    /* Basic request data. */
-    bt_req_t request;
-
-    /* Fills object with data in buffer. */
-    bt_read_request_data(buff, &request);
-
-    /* Get the printable IPv4 address from the socket. */
     char ipv4_str[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &si_other.sin_addr, ipv4_str, INET_ADDRSTRLEN);
+    syslog(LOG_DEBUG, "Datagram received from %s:%d", ipv4_str, ntohs(si_other.sin_port));
 
-    syslog(LOG_DEBUG, "Datagram received from %s:%d. Action = %" PRId32
-           ", Connection ID = %" PRId64 ", Transaction ID = %" PRId32,
-           ipv4_str, ntohs(si_other.sin_port), request.action,
-           request.connection_id, request.transaction_id);
+    /* Clone the input buffer so the processing thread can use it safely. */
+    char *buff_clone = (char *) malloc(BT_RECV_BUFLEN);
+    memcpy(buff_clone, buff, BT_RECV_BUFLEN);
 
-    /* Dispatches the request to the appropriate handler function. */
-    switch (request.action) {
-    case BT_ACTION_CONNECT:
-      resp_buffer = bt_handle_connection(&request, &config, redis);
-      break;
+    bt_job_params_t params = {
+      .sock = in_sock,
+      .buff = buff_clone,
+      .from_addr = &si_other,
+      .from_addr_len = other_len
+    };
 
-    case BT_ACTION_ANNOUNCE:
-      resp_buffer = bt_handle_announce(&request, &config, buff, &si_other, redis);
-      break;
-
-    case BT_ACTION_SCRAPE:
-    default:
-      break;
-    }
-
-    if (resp_buffer != NULL) {
-      syslog(LOG_DEBUG, "Sending response back to the client");
-      if (sendto(in_sock, resp_buffer->data, resp_buffer->length, 0,
-                 (struct sockaddr *) &si_other, other_len) == -1) {
-        syslog(LOG_ERR, "Error in sendto()");
-      }
-
-      /* Destroys response data. */
-      free(resp_buffer->data);
-      free(resp_buffer);
+    if (g_thread_pool_push(pool, &params, NULL)) {
+      syslog(LOG_DEBUG, "Successfully pushed job to thread pool");
     }
   }
 }
 
 void on_sigint(int signum) {
+  signal(signum, SIG_DFL);
+
   syslog(LOG_DEBUG, "Freeing resources");
 
-  /* Closes the connection with Redis. */
-  if (redis != NULL) {
-    redisFree(redis);
-  }
+  /* Terminates the thread pool. */
+  g_thread_pool_free(pool, true, true);
 
-  /* Close UDP socket. */
-  freeaddrinfo(in_addrinfo);
+  /* Gives some time for the threads to be destroyed. */
+  sleep(1);
+
+  /* Closes UDP socket. */
   close(in_sock);
+  freeaddrinfo(in_addrinfo);
 
   syslog(LOG_INFO, "Exiting");
   closelog();
 
-  /* Resume signal's default behavior. */
-  signal(signum, SIG_DFL);
   raise(signum);
 }

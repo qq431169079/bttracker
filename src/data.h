@@ -39,8 +39,11 @@ typedef struct {
 
   // Misc options
   uint16_t bttracker_port;
-  uint16_t bttracker_num_threads;
   bool bttracker_debug_mode;
+
+  // Threading options
+  uint16_t thread_max;
+  uint32_t thread_max_idle_time;
 
   // Announce options
   uint32_t announce_wait_time;
@@ -157,9 +160,6 @@ bool bt_load_config(const char *filename, bt_config_t *config);
 
 /* Connects to the specified redis instance. */
 redisContext *bt_redis_connect(const char *host, int port, long timeout, int db);
-
-/* Pings the Redis instance and returns true if it everything's okay. */
-bool bt_redis_ping(redisContext *redis);
 
 
 /*
