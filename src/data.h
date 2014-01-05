@@ -130,6 +130,13 @@ typedef struct {
   uint16_t port;
 } bt_peer_addr_t;
 
+/* Stats about a given torrent. */
+typedef struct {
+  int32_t seeders;
+  int32_t leechers;
+  int64_t downloads;
+} bt_torrent_stats_t;
+
 /* Object that holds serialized data to be transmitted over the wire. */
 typedef struct {
   size_t length;
@@ -208,9 +215,9 @@ void bt_remove_peer(redisContext *redis, const bt_config_t *config,
 void bt_promote_peer(redisContext *redis, const bt_config_t *config,
                      const int8_t *info_hash, const int8_t *peer_id);
 
-/* Return the number of peers (leechers or seeders) on the swarm. */
-int32_t bt_peer_count(redisContext *redis, const bt_config_t *config,
-                      const int8_t *info_hash, bool seeder);
+/* Fills `stats` with the latests stats for a torrent. */
+void bt_get_torrent_stats(redisContext *redis, const bt_config_t *config,
+                          const int8_t *info_hash, bt_torrent_stats_t *stats);
 
 /* Returns a random list containing a random subset of leechers or seeders. */
 bt_list_t *bt_peer_list(redisContext *redis, const bt_config_t *config,

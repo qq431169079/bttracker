@@ -263,29 +263,46 @@ void bt_increment_downloads(redisContext *redis, const bt_config_t *config,
   freeReplyObject(reply);
 }
 
-int32_t bt_peer_count(redisContext *redis, const bt_config_t *config,
-                      const int8_t *info_hash, bool seeder) {
+/* Fills `stats` with the latests stats for a torrent. */
+void bt_get_torrent_stats(redisContext *redis, const bt_config_t *config,
+                          const int8_t *info_hash, bt_torrent_stats_t *stats) {
   redisReply *reply;
-  int32_t count = 0;
-  char *peer_prefix = seeder ? "sd" : "lc";
 
-  reply = redisCommand(redis, "KEYS %s:pr:%b:%s:*",
-                       config->redis_key_prefix, info_hash, (size_t) 20, peer_prefix);
+  /* Counts the number of seeders. */
+  redisAppendCommand(redis, "KEYS %s:pr:%b:sd:*",
+                     config->redis_key_prefix, info_hash, (size_t) 20);
 
-  if (reply == NULL) {
-    syslog(LOG_ERR, "Got a NULL reply from Redis");
-    return 0;
+  /* Counts the number of leechers. */
+  redisAppendCommand(redis, "KEYS %s:pr:%b:lc:*",
+                     config->redis_key_prefix, info_hash, (size_t) 20);
+
+  /* Returns the number of times this torrent has been downloaded. */
+  redisAppendCommand(redis, "HGET %s:ih:%s downs",
+                     config->redis_key_prefix, info_hash, (size_t) 20);
+
+  if (redisGetReply(redis, (void **) &reply) == REDIS_OK) {
+    stats->seeders = reply->elements;
   }
 
-  if (reply->type == REDIS_REPLY_ARRAY) {
-    count = reply->elements;
-  } else {
-    syslog(LOG_ERR, "Cannot count peers");
+  if (reply != NULL) {
+    freeReplyObject(reply);
   }
 
-  freeReplyObject(reply);
+  if (redisGetReply(redis, (void **) &reply) == REDIS_OK) {
+    stats->leechers = reply->elements;
+  }
 
-  return count;
+  if (reply != NULL) {
+    freeReplyObject(reply);
+  }
+
+  if (redisGetReply(redis, (void **) &reply) == REDIS_OK) {
+    stats->downloads = reply->integer;
+  }
+
+  if (reply != NULL) {
+    freeReplyObject(reply);
+  }
 }
 
 bt_list_t *bt_peer_list(redisContext *redis, const bt_config_t *config,

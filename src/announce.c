@@ -130,13 +130,17 @@ bt_response_buffer_t *bt_handle_announce(const bt_req_t *request,
     }
   }
 
+  /* Retrieves the latest status about this torrent. */
+  bt_torrent_stats_t stats;
+  bt_get_torrent_stats(redis, config, info_hash, &stats);
+
   /* Fixed announce response fields. */
   bt_announce_resp_t response_header = {
     .action = request->action,
     .transaction_id = request->transaction_id,
     .interval = config->announce_wait_time,
-    .leechers = bt_peer_count(redis, config, info_hash, false),
-    .seeders = bt_peer_count(redis, config, info_hash, true)
+    .leechers = stats.leechers,
+    .seeders = stats.seeders
   };
 
   return bt_serialize_announce_response(&response_header, peer_count, peers);
