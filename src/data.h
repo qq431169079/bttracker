@@ -34,6 +34,13 @@
 /* Uses Glib's implementation of a doubly linked list. */
 typedef GList bt_list_t;
 
+/* Flags that identify whether some event is ellegible to be blacklisted. */
+typedef enum {
+  BT_RESTRICTION_NONE,
+  BT_RESTRICTION_WHITELIST,
+  BT_RESTRICTION_BLACKLIST
+} bt_restriction;
+
 /* Configuration data. */
 typedef struct {
 
@@ -56,6 +63,9 @@ typedef struct {
   uint32_t redis_timeout;
   uint16_t redis_db;
   char *redis_key_prefix;
+
+  // Blacklist options
+  bt_restriction info_hash_restriction;
 } bt_config_t;
 
 /* Fields common to all types of requests. */
@@ -196,6 +206,9 @@ void bt_bytearray_to_hexarray(int8_t *bin, size_t binsz, char **result);
 void bt_increment_downloads(redisContext *redis, const bt_config_t *config,
                             const char *info_hash_str);
 
+/* Returns whether the given torrent is blacklisted. */
+bool bt_info_hash_blacklisted(redisContext *redis, const char *info_hash_str,
+                              const bt_config_t *config);
 
 /*
  * Peer management.

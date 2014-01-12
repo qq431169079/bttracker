@@ -70,6 +70,18 @@ bool bt_load_config(const char *filename, bt_config_t *config) {
   config->announce_peer_ttl    = g_key_file_get_integer(keyfile, "Announce", "PeerTTL", NULL);
   config->announce_max_numwant = g_key_file_get_integer(keyfile, "Announce", "MaxNumWant", NULL);
 
+  char *info_hash_restriction_str = g_key_file_get_string(keyfile, "Announce", "InfoHashRestriction", NULL);
+
+  if (strcmp(info_hash_restriction_str, "whitelist") == 0) {
+    config->info_hash_restriction = BT_RESTRICTION_WHITELIST;
+  } else if (strcmp(info_hash_restriction_str, "blacklist") == 0) {
+    config->info_hash_restriction = BT_RESTRICTION_BLACKLIST;
+  } else {
+    config->info_hash_restriction = BT_RESTRICTION_NONE;
+  }
+
+  free(info_hash_restriction_str);
+
   config->redis_host       = g_key_file_get_string(keyfile,  "Redis", "Host", NULL);
   config->redis_port       = g_key_file_get_integer(keyfile, "Redis", "Port", NULL);
   config->redis_timeout    = g_key_file_get_integer(keyfile, "Redis", "Timeout", NULL);
@@ -120,7 +132,7 @@ bool bt_redis_ping(redisContext *redis) {
   reply = redisCommand(redis, "PING");
 
   if (reply != NULL) {
-    ok = reply->type != REDIS_REPLY_ERROR;
+    ok = (reply->type != REDIS_REPLY_ERROR);
     freeReplyObject(reply);
   }
 
@@ -281,6 +293,45 @@ void bt_increment_downloads(redisContext *redis, const bt_config_t *config,
   }
 
   freeReplyObject(reply);
+}
+
+bool bt_info_hash_blacklisted(redisContext *redis, const char *info_hash_str,
+                              const bt_config_t *config) {
+  redisReply *reply;
+  bool blacklisted = true;
+
+  switch (config->info_hash_restriction) {
+  case BT_RESTRICTION_WHITELIST:
+    reply = redisCommand(redis, "SISMEMBER %s:ih:wl %s",
+                         config->redis_key_prefix, info_hash_str);
+
+    if (reply == NULL) {
+      syslog(LOG_ERR, "Got a NULL reply from Redis");
+    } else {
+      blacklisted = (reply->type == REDIS_REPLY_INTEGER && reply->integer == 0);
+      freeReplyObject(reply);
+    }
+
+    break;
+
+  case BT_RESTRICTION_BLACKLIST:
+    reply = redisCommand(redis, "SISMEMBER %s:ih:bl %s",
+                         config->redis_key_prefix, info_hash_str);
+
+    if (reply == NULL) {
+      syslog(LOG_ERR, "Got a NULL reply from Redis");
+    } else {
+      blacklisted = (reply->type == REDIS_REPLY_INTEGER && reply->integer > 0);
+      freeReplyObject(reply);
+    }
+
+    break;
+
+  case BT_RESTRICTION_NONE:
+    blacklisted = false;
+  }
+
+  return blacklisted;
 }
 
 /* Fills `stats` with the latests stats for a torrent. */

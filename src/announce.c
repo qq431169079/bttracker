@@ -101,6 +101,13 @@ bt_response_buffer_t *bt_handle_announce(const bt_req_t *request,
 
   syslog(LOG_DEBUG, "Handling announce. Event = %" PRId32, announce_request.event);
 
+  /* Checks whether the announced info hash is blacklisted. */
+  if (bt_info_hash_blacklisted(redis, info_hash_str, config)) {
+    syslog(LOG_DEBUG, "Blacklisted info hash: %s", info_hash_str);
+    free(info_hash_str);
+    return bt_send_error(request, "Blacklisted info hash");
+  }
+
   /* Whether the requesting peer is a seeder. */
   bool is_seeder = announce_request.left == 0;
 
@@ -144,7 +151,6 @@ bt_response_buffer_t *bt_handle_announce(const bt_req_t *request,
     .seeders = stats.seeders
   };
 
-  /* Info hash hex string no longer needed. */
   free(info_hash_str);
 
   return bt_serialize_announce_response(&response_header, peer_count, peers);

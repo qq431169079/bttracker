@@ -7,8 +7,9 @@ Tracker Protocol for BitTorrent) implementation in C.
 
 ## Features
 
-* Worker threads for enhanced concurrency
 * Uses Redis as data storage
+* Worker threads for enhanced concurrency
+* Ability to whitelist or blacklist specific torrents
 * Syslog integration with detailed logging (debug mode)
 * Configurable via `.conf` file
 

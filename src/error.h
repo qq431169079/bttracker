@@ -32,6 +32,6 @@
 #define BTTRACKER_ERROR_H_
 
 /* Returns the response data to a announce request. */
-bt_response_buffer_t *bt_send_error(bt_req_t *request, const char *msg);
+bt_response_buffer_t *bt_send_error(const bt_req_t *request, const char *msg);
 
 #endif // BTTRACKER_ERROR_H_

@@ -28,8 +28,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-bt_response_buffer_t *bt_send_error(bt_req_t *request, const char *msg) {
-  bt_response_buffer_t *resp_buffer = (bt_response_buffer_t *) malloc(sizeof(bt_response_buffer_t));
+bt_response_buffer_t *bt_send_error(const bt_req_t *request, const char *msg) {
+
+  bt_response_buffer_t *resp_buffer = (bt_response_buffer_t *)
+    malloc(sizeof(bt_response_buffer_t));
 
   if (resp_buffer == NULL) {
     syslog(LOG_ERR, "Cannot allocate memory for response object");
@@ -45,7 +47,13 @@ bt_response_buffer_t *bt_send_error(bt_req_t *request, const char *msg) {
     exit(BT_EXIT_MALLOC_ERROR);
   }
 
-  bt_write_error_data(resp_buffer->data, request, msg);
+  bt_req_t req_copy = {
+    .connection_id = request->connection_id,
+    .action = BT_ACTION_ERROR,
+    .transaction_id = request->transaction_id
+  };
+
+  bt_write_error_data(resp_buffer->data, &req_copy, msg);
 
   return resp_buffer;
 }
