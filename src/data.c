@@ -28,6 +28,22 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+void bt_bytearray_to_hexarray(int8_t *bin, size_t binsz, char **result) {
+  const char *hex_str = "0123456789abcdef";
+
+  *result = (char *)malloc(binsz * 2 + 1);
+  (*result)[binsz * 2] = 0;
+
+  if (!binsz) {
+    return;
+  }
+
+  for (int i = 0; i < binsz; i++) {
+    (*result)[i * 2 + 0] = hex_str[(bin[i] >> 4) & 0xF];
+    (*result)[i * 2 + 1] = hex_str[bin[i] & 0x0F];
+  }
+}
+
 bool bt_load_config(const char *filename, bt_config_t *config) {
   GKeyFile *keyfile;
   GKeyFileFlags flags;
@@ -175,13 +191,13 @@ bt_peer_addr_t *bt_new_peer_addr(uint32_t ipv4_addr, uint16_t port) {
 }
 
 void bt_insert_peer(redisContext *redis, const bt_config_t *config,
-                    const int8_t *info_hash, const int8_t *peer_id,
+                    const char *info_hash_str, const int8_t *peer_id,
                     const bt_peer_t *peer_data, bool is_seeder) {
   redisReply *reply;
   char *peer_prefix = is_seeder ? "sd" : "lc";
 
-  reply = redisCommand(redis, "SETEX %s:pr:%b:%s:%b %d %b",
-                       config->redis_key_prefix, info_hash, (size_t) 20,
+  reply = redisCommand(redis, "SETEX %s:pr:%s:%s:%b %d %b",
+                       config->redis_key_prefix, info_hash_str,
                        peer_prefix, peer_id, (size_t) 20,
                        config->announce_peer_ttl, peer_data, sizeof(bt_peer_t));
 
@@ -200,12 +216,13 @@ void bt_insert_peer(redisContext *redis, const bt_config_t *config,
 }
 
 void bt_remove_peer(redisContext *redis, const bt_config_t *config,
-                    const int8_t *info_hash, const int8_t *peer_id, bool is_seeder) {
+                    const char *info_hash_str, const int8_t *peer_id,
+                    bool is_seeder) {
   redisReply *reply;
   char *peer_prefix = is_seeder ? "sd" : "lc";
 
-  reply = redisCommand(redis, "DEL %s:pr:%b:%s:%b",
-                       config->redis_key_prefix, info_hash, (size_t) 20,
+  reply = redisCommand(redis, "DEL %s:pr:%s:%s:%b",
+                       config->redis_key_prefix, info_hash_str,
                        peer_prefix, peer_id, (size_t) 20);
 
   if (reply == NULL) {
@@ -223,12 +240,12 @@ void bt_remove_peer(redisContext *redis, const bt_config_t *config,
 }
 
 void bt_promote_peer(redisContext *redis, const bt_config_t *config,
-                     const int8_t *info_hash, const int8_t *peer_id) {
+                     const char *info_hash_str, const int8_t *peer_id) {
   redisReply *reply;
 
-  reply = redisCommand(redis, "RENAME %s:pr:%b:lc:%b %s:pr:%b:sd:%b",
-                       config->redis_key_prefix, info_hash, (size_t) 20, peer_id, (size_t) 20,
-                       config->redis_key_prefix, info_hash, (size_t) 20, peer_id, (size_t) 20);
+  reply = redisCommand(redis, "RENAME %s:pr:%s:lc:%b %s:pr:%s:sd:%b",
+                       config->redis_key_prefix, info_hash_str, peer_id, (size_t) 20,
+                       config->redis_key_prefix, info_hash_str, peer_id, (size_t) 20);
 
   if (reply == NULL) {
     syslog(LOG_ERR, "Got a NULL reply from Redis");
@@ -241,18 +258,18 @@ void bt_promote_peer(redisContext *redis, const bt_config_t *config,
     syslog(LOG_DEBUG, "Peer promoted from leecher to seeder");
 
     /* Increments the number of times this torrent was downloaded. */
-    bt_increment_downloads(redis, config, info_hash);
+    bt_increment_downloads(redis, config, info_hash_str);
   }
 
   freeReplyObject(reply);
 }
 
 void bt_increment_downloads(redisContext *redis, const bt_config_t *config,
-                            const int8_t *info_hash) {
+                            const char *info_hash_str) {
   redisReply *reply;
 
-  reply = redisCommand(redis, "HINCRBY %s:ih:%b downs 1",
-                       config->redis_key_prefix, info_hash, (size_t) 20);
+  reply = redisCommand(redis, "HINCRBY %s:ih:%s downs 1",
+                       config->redis_key_prefix, info_hash_str);
 
   if (reply == NULL) {
     syslog(LOG_ERR, "Got a NULL reply from Redis");
@@ -268,20 +285,20 @@ void bt_increment_downloads(redisContext *redis, const bt_config_t *config,
 
 /* Fills `stats` with the latests stats for a torrent. */
 void bt_get_torrent_stats(redisContext *redis, const bt_config_t *config,
-                          const int8_t *info_hash, bt_torrent_stats_t *stats) {
+                          const char *info_hash_str, bt_torrent_stats_t *stats) {
   redisReply *reply;
 
   /* Counts the number of seeders. */
-  redisAppendCommand(redis, "KEYS %s:pr:%b:sd:*",
-                     config->redis_key_prefix, info_hash, (size_t) 20);
+  redisAppendCommand(redis, "KEYS %s:pr:%s:sd:*",
+                     config->redis_key_prefix, info_hash_str);
 
   /* Counts the number of leechers. */
-  redisAppendCommand(redis, "KEYS %s:pr:%b:lc:*",
-                     config->redis_key_prefix, info_hash, (size_t) 20);
+  redisAppendCommand(redis, "KEYS %s:pr:%s:lc:*",
+                     config->redis_key_prefix, info_hash_str);
 
   /* Returns the number of times this torrent has been downloaded. */
   redisAppendCommand(redis, "HGET %s:ih:%s downs",
-                     config->redis_key_prefix, info_hash, (size_t) 20);
+                     config->redis_key_prefix, info_hash_str);
 
   if (redisGetReply(redis, (void **) &reply) == REDIS_OK) {
     stats->seeders = reply->elements;
@@ -306,7 +323,7 @@ void bt_get_torrent_stats(redisContext *redis, const bt_config_t *config,
 }
 
 bt_list_t *bt_peer_list(redisContext *redis, const bt_config_t *config,
-                        const int8_t *info_hash, int32_t num_want,
+                        const char *info_hash_str, int32_t num_want,
                         int *peer_count, bool seeder) {
   redisReply *reply;
 
@@ -316,9 +333,8 @@ bt_list_t *bt_peer_list(redisContext *redis, const bt_config_t *config,
   /* We give seeders for leechers, and leechers for seeders. */
   char *peer_prefix = seeder ? "sd" : "lc";
 
-  reply = redisCommand(redis, "KEYS %s:pr:%b:%s:*",
-                       config->redis_key_prefix, info_hash, (size_t) 20,
-                       peer_prefix);
+  reply = redisCommand(redis, "KEYS %s:pr:%s:%s:*",
+                       config->redis_key_prefix, info_hash_str, peer_prefix);
 
   if (reply == NULL) {
     syslog(LOG_ERR, "Got a NULL reply from Redis");

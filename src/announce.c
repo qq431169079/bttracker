@@ -29,23 +29,23 @@
  */
 
 void bt_update_peer_list(redisContext *redis, bt_config_t *config, bt_announce_req_t *announce_request,
-                         struct sockaddr_in *client_addr, int8_t *info_hash, bool is_seeder) {
+                         struct sockaddr_in *client_addr, char *info_hash_str, bool is_seeder) {
 
   bt_peer_t *peer = NULL;
   int8_t *peer_id = announce_request->peer_id;
 
   switch(announce_request->event) {
   case BT_EVENT_STOPPED:
-    bt_remove_peer(redis, config, info_hash, peer_id, is_seeder);
+    bt_remove_peer(redis, config, info_hash_str, peer_id, is_seeder);
     break;
 
   case BT_EVENT_COMPLETED:
-    bt_promote_peer(redis, config, info_hash, peer_id);
+    bt_promote_peer(redis, config, info_hash_str, peer_id);
     break;
 
   default:
     peer = bt_new_peer(announce_request, (uint32_t) ntohl(client_addr->sin_addr.s_addr));
-    bt_insert_peer(redis, config, info_hash, peer_id, peer, is_seeder);
+    bt_insert_peer(redis, config, info_hash_str, peer_id, peer, is_seeder);
 
     free(peer);
   }
@@ -95,8 +95,9 @@ bt_response_buffer_t *bt_handle_announce(const bt_req_t *request,
   bt_announce_req_t announce_request;
   bt_read_announce_request_data(buff, &announce_request);
 
-  /* Common accessed fields. */
-  int8_t *info_hash = announce_request.info_hash;
+  /* Uses a more user friendly representation for the info hash byte array. */
+  char *info_hash_str;
+  bt_bytearray_to_hexarray(announce_request.info_hash, 20, &info_hash_str);
 
   syslog(LOG_DEBUG, "Handling announce. Event = %" PRId32, announce_request.event);
 
@@ -104,7 +105,7 @@ bt_response_buffer_t *bt_handle_announce(const bt_req_t *request,
   bool is_seeder = announce_request.left == 0;
 
   /* Updates the list of peers by updating or removing the requesting peer. */
-  bt_update_peer_list(redis, config, &announce_request, client_addr, info_hash, is_seeder);
+  bt_update_peer_list(redis, config, &announce_request, client_addr, info_hash_str, is_seeder);
 
   /* Number of peers to retrieve from the swarm. */
   int32_t num_want = announce_request.num_want;
@@ -115,12 +116,12 @@ bt_response_buffer_t *bt_handle_announce(const bt_req_t *request,
    * First, if the requesting peer is a seeder, we try to get all leechers.
    * Similarly, if the peer is a leecher, we try to get all seeders.
    */
-  peers = bt_peer_list(redis, config, info_hash, num_want,  &peer_count, !is_seeder);
+  peers = bt_peer_list(redis, config, info_hash_str, num_want,  &peer_count, !is_seeder);
 
   /* Fallbacks to sibling peers in order to fill the gap. */
   if (peer_count < num_want) {
     int complement_count = 0;
-    bt_list_t *complement = bt_peer_list(redis, config, info_hash, (num_want - peer_count),
+    bt_list_t *complement = bt_peer_list(redis, config, info_hash_str, (num_want - peer_count),
                                          &complement_count, is_seeder);
 
     /* There are new peers to add to the previous list. */
@@ -132,7 +133,7 @@ bt_response_buffer_t *bt_handle_announce(const bt_req_t *request,
 
   /* Retrieves the latest status about this torrent. */
   bt_torrent_stats_t stats;
-  bt_get_torrent_stats(redis, config, info_hash, &stats);
+  bt_get_torrent_stats(redis, config, info_hash_str, &stats);
 
   /* Fixed announce response fields. */
   bt_announce_resp_t response_header = {
@@ -142,6 +143,9 @@ bt_response_buffer_t *bt_handle_announce(const bt_req_t *request,
     .leechers = stats.leechers,
     .seeders = stats.seeders
   };
+
+  /* Info hash hex string no longer needed. */
+  free(info_hash_str);
 
   return bt_serialize_announce_response(&response_header, peer_count, peers);
 }

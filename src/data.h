@@ -189,9 +189,12 @@ bool bt_connection_valid(redisContext *redis, const bt_config_t *config,
  * Torrents.
  */
 
+/* Converts the info hash byte array to string. */
+void bt_bytearray_to_hexarray(int8_t *bin, size_t binsz, char **result);
+
 /* Increments the number of times a torrent has been downloaded. */
 void bt_increment_downloads(redisContext *redis, const bt_config_t *config,
-                            const int8_t *info_hash);
+                            const char *info_hash_str);
 
 
 /*
@@ -206,25 +209,25 @@ bt_peer_addr_t *bt_new_peer_addr(uint32_t ipv4_addr, uint16_t port);
 
 /* Inserts a peer (seeder or leecher) to the swarm of a torrent. */
 void bt_insert_peer(redisContext *redis, const bt_config_t *config,
-                    const int8_t *info_hash, const int8_t *peer_id,
+                    const char *info_hash_str, const int8_t *peer_id,
                     const bt_peer_t *peer_data, bool is_seeder);
 
 /* Removes a peer from the swarm of a torrent. */
 void bt_remove_peer(redisContext *redis, const bt_config_t *config,
-                    const int8_t *info_hash, const int8_t *peer_id,
+                    const char *info_hash_str, const int8_t *peer_id,
                     bool is_seeder);
 
 /* Promotes a peer from leecher to seeder. */
 void bt_promote_peer(redisContext *redis, const bt_config_t *config,
-                     const int8_t *info_hash, const int8_t *peer_id);
+                     const char *info_hash_str, const int8_t *peer_id);
 
 /* Fills `stats` with the latests stats for a torrent. */
 void bt_get_torrent_stats(redisContext *redis, const bt_config_t *config,
-                          const int8_t *info_hash, bt_torrent_stats_t *stats);
+                          const char *info_hash_str, bt_torrent_stats_t *stats);
 
 /* Returns a random list containing a random subset of leechers or seeders. */
 bt_list_t *bt_peer_list(redisContext *redis, const bt_config_t *config,
-                        const int8_t *info_hash, int32_t num_want,
+                        const char *info_hash_str, int32_t num_want,
                         int *peer_count, bool seeder);
 
 #endif // BTTRACKER_DATA_H_
