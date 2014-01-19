@@ -1,5 +1,5 @@
-AM_CFLAGS = -g -Wall -O3 $(PTHREAD_CFLAGS) $(GLIB_CFLAGS) -include allheads.h
-LIBS = $(PTHREAD_LIBS) $(GLIB_LIBS) -lhiredis
+AM_CFLAGS = -g -Wall -O3 $(GLIB_CFLAGS) -include allheads.h
+LIBS = $(GLIB_LIBS) -lhiredis
 
 MAIN = bttracker.c
 SRC = random.c net.c data.c error.c connect.c handshake.c announce.c pool.c
