@@ -30,13 +30,6 @@
 
 int64_t bt_random_int64(void) {
   int64_t ran = 0;
-  static bool initialized = false;
-
-  /* First call initializes the seed. */
-  if (!initialized) {
-    srand((unsigned) time(NULL));
-    initialized = true;
-  }
 
   /* Assume rand() has at least 12 bits of precision. */
   for (int i = 0; i < sizeof(ran); i++) {

@@ -44,7 +44,7 @@ void on_sigint(int signum);
 int main(int argc, char *argv[]) {
 
   /* Seed the pseudo-random number generator. */
-  srand(time(NULL));
+  srand((unsigned) time(NULL));
 
   /* Default logging level. */
   setlogmask(LOG_UPTO(LOG_INFO));
