@@ -33,7 +33,7 @@ First, make sure you have the required toolchain in order to compile it:
 * [GCC](http://gcc.gnu.org/), or a C-99 compiler
 * [pkg-config](http://www.freedesktop.org/wiki/Software/pkg-config/)
 * [Automake](http://www.gnu.org/software/automake/)
-* [Autoconf](http://www.gnu.org/software/autoconf/‎)
+* [Autoconf](http://www.gnu.org/software/autoconf/)
 
 Also, you need to install the required software/libraries:
 
