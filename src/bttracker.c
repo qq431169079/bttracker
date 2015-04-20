@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) {
 
   /* Local address where the UDP server socket will bind against. */
   syslog(LOG_DEBUG, "Creating UDP server socket");
-  in_sock = bt_ipv4_udp_sock(config.bttracker_port, &in_addrinfo);
+  in_sock = bt_ipv4_udp_sock(config.bttracker_addr, config.bttracker_port, &in_addrinfo);
 
   syslog(LOG_DEBUG, "Binding UDP socket to local port %d", config.bttracker_port);
   if (bind(in_sock, in_addrinfo->ai_addr, in_addrinfo->ai_addrlen) == -1) {

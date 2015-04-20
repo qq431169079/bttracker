@@ -62,6 +62,6 @@ void bt_read_scrape_request_data(char *buffer, size_t buflen, bt_scrape_req_t *r
 void bt_write_scrape_response_data(char *resp_buffer, bt_scrape_resp_t *resp);
 
 /* Fills a `struct addrinfo` and returns a corresponding UDP socket. */
-int bt_ipv4_udp_sock(uint16_t port, struct addrinfo **addrinfo);
+int bt_ipv4_udp_sock(const char *addr, uint16_t port, struct addrinfo **addrinfo);
 
 #endif // BTTRACKER_NET_H_

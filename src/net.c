@@ -28,7 +28,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-int bt_ipv4_udp_sock(uint16_t port, struct addrinfo **addrinfo) {
+int bt_ipv4_udp_sock(const char *addr, uint16_t port, struct addrinfo **addrinfo) {
   struct addrinfo hints = {
     .ai_family = AF_INET,      // IPv4
     .ai_socktype = SOCK_DGRAM,
@@ -38,7 +38,7 @@ int bt_ipv4_udp_sock(uint16_t port, struct addrinfo **addrinfo) {
   char portstr[10];
   sprintf(portstr, "%d", port);
 
-  if (getaddrinfo(NULL, portstr, &hints, addrinfo) != 0) {
+  if (getaddrinfo(addr, portstr, &hints, addrinfo) != 0) {
     syslog(LOG_ERR, "Error in getaddrinfo(). Exiting");
     exit(BT_EXIT_NETWORK_ERROR);
   }

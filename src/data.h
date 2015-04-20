@@ -45,6 +45,7 @@ typedef enum {
 typedef struct {
 
   // Misc options
+  char *bttracker_addr;
   uint16_t bttracker_port;
   bool bttracker_debug_mode;
 

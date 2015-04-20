@@ -61,6 +61,7 @@ bool bt_load_config(const char *filename, bt_config_t *config) {
 
   /* Fills the config data struct, one section at a time. */
   config->bttracker_debug_mode = g_key_file_get_boolean(keyfile, "BtTracker", "DebugMode", NULL);
+  config->bttracker_addr       = g_key_file_get_string (keyfile, "BtTracker", "Address", NULL);
   config->bttracker_port       = g_key_file_get_integer(keyfile, "BtTracker", "Port", NULL);
 
   config->thread_max           = g_key_file_get_integer(keyfile, "Threading", "MaxThreads", NULL);
