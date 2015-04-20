@@ -134,18 +134,31 @@ typedef struct {
   int32_t seeders;
 } bt_announce_resp_t;
 
+/* Data sent by the client when it asks for torrent stats. */
+typedef struct {
+  _BT_REQUEST_HEADER_
+  size_t info_hash_len;
+  int8_t *info_hash[20];
+} bt_scrape_req_t;
+
+/* Stats about a given torrent. */
+typedef struct {
+  int32_t seeders;
+  int32_t downloads;
+  int32_t leechers;
+} bt_torrent_stats_t;
+
+/* Data sent to the client in response to a scrape request. */
+typedef struct {
+  _BT_RESPONSE_HEADER_
+  bt_list_t *scrape_entries;
+} bt_scrape_resp_t;
+
 /* Peer address. */
 typedef struct {
   int32_t ipv4_addr;
   uint16_t port;
 } bt_peer_addr_t;
-
-/* Stats about a given torrent. */
-typedef struct {
-  int32_t seeders;
-  int32_t leechers;
-  int64_t downloads;
-} bt_torrent_stats_t;
 
 /* Object that holds serialized data to be transmitted over the wire. */
 typedef struct {

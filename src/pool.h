@@ -34,6 +34,7 @@
 /* Request raw data. */
 typedef struct {
   char *buff;
+  size_t buflen;
   int sock;
   struct sockaddr_in *from_addr;
   size_t from_addr_len;

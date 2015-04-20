@@ -55,6 +55,12 @@ void bt_write_announce_response_data(char *resp_buffer, bt_announce_resp_t *resp
 /* Writes the peer data to be sent along the announce response. */
 void bt_write_announce_peer_data(char *resp_buffer, bt_list_t *peers);
 
+/* Fills the scrape request with buffer data. */
+void bt_read_scrape_request_data(char *buffer, size_t buflen, bt_scrape_req_t *req);
+
+/* Writes the scrape response data to an output buffer. */
+void bt_write_scrape_response_data(char *resp_buffer, bt_scrape_resp_t *resp);
+
 /* Fills a `struct addrinfo` and returns a corresponding UDP socket. */
 int bt_ipv4_udp_sock(uint16_t port, struct addrinfo **addrinfo);
 

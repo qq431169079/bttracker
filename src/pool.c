@@ -86,7 +86,7 @@ void bt_request_processor(void *job_params, void *pool_params) {
     break;
 
   case BT_ACTION_SCRAPE:
-    /* Not supported yet. */
+    resp_buffer = bt_handle_scrape(&request, config, params->buff, params->buflen, redis);
     break;
 
   case BT_ACTION_ERROR:

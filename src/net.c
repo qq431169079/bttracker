@@ -140,3 +140,42 @@ void bt_write_announce_peer_data(char *resp_buffer, bt_list_t *peers) {
     current_peer = g_list_next(current_peer);
   }
 }
+
+void bt_read_scrape_request_data(char *buffer, size_t buflen, bt_scrape_req_t *req) {
+  req->info_hash_len = (buflen - 16) / 20;
+
+  /* Array of info_hashes, do not need conversion. */
+  memcpy(req->info_hash, buffer+16, buflen - 16);
+
+  /* Converts data to host byte order. */
+  req->connection_id = ntohll(*((int64_t *) buffer));
+  req->action = ntohl(*((int32_t *)(buffer+8)));
+  req->transaction_id = ntohl(*((int32_t *) (buffer+12)));
+}
+
+void bt_write_scrape_response_data(char *resp_buffer, bt_scrape_resp_t *resp) {
+  bt_list_t *current_entry = resp->scrape_entries;
+  int nentry = 0;
+
+  /* Converts data to network byte order. */
+  resp->action = htonl(resp->action);
+  resp->transaction_id = htonl(resp->transaction_id);
+
+  /* Writes each field of the announce response. */
+  memcpy(resp_buffer,      &resp->action, 4);
+  memcpy(resp_buffer +  4, &resp->transaction_id, 4);
+
+  while (current_entry != NULL) {
+    bt_torrent_stats_t *entry = (bt_torrent_stats_t *) current_entry->data;
+
+    /* Converts data to network byte order. */
+    entry->seeders   = htonl(entry->seeders);
+    entry->leechers  = htonl(entry->leechers);
+    entry->downloads = htonl(entry->downloads);
+
+    /* Writes the stats in the response buffer. */
+    memcpy(resp_buffer + 8 + 12 * nentry++, entry, sizeof(bt_torrent_stats_t));
+
+    current_entry = g_list_next(current_entry);
+  }
+}

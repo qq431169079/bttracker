@@ -88,9 +88,10 @@ int main(int argc, char *argv[]) {
 
   while (true) {
     char buff[BT_RECV_BUFLEN];
+    size_t buflen = recvfrom(in_sock, buff, BT_RECV_BUFLEN, 0,
+                             (struct sockaddr *) &si_other, &other_len);
 
-    if (recvfrom(in_sock, buff, BT_RECV_BUFLEN, 0,
-                 (struct sockaddr *) &si_other, &other_len) == -1) {
+    if (buflen == -1) {
       syslog(LOG_ERR, "Cannot retrieve data from socket. Continuing");
       continue;
     }
@@ -106,6 +107,7 @@ int main(int argc, char *argv[]) {
     bt_job_params_t params = {
       .sock = in_sock,
       .buff = buff_clone,
+      .buflen = buflen,
       .from_addr = &si_other,
       .from_addr_len = other_len
     };

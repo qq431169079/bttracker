@@ -20,12 +20,6 @@ This code is known to compile and run on the following operating systems:
 * Linux (tested on ArchLinux and Ubuntu)
 * Mac OS X 10.8+ (with [Homebrew](http://brew.sh/))
 
-### Current Status
-
-At this point, BtTracker is only capable of receiving incoming connection
-requests and responding to announces; support for scrapes are not yet
-implemented (hopefully it will be soon enough).
-
 ## Building
 
 First, make sure you have the required toolchain in order to compile it:
