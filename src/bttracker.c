@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
 
     char ipv4_str[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &si_other.sin_addr, ipv4_str, INET_ADDRSTRLEN);
-    syslog(LOG_DEBUG, "Datagram received from %s:%d", ipv4_str, ntohs(si_other.sin_port));
+    syslog(LOG_DEBUG, "Datagram received");
 
     /* Clone the input buffer so the processing thread can use it safely. */
     char *buff_clone = (char *) malloc(BT_RECV_BUFLEN);
