@@ -104,15 +104,16 @@ int main(int argc, char *argv[]) {
     char *buff_clone = (char *) malloc(BT_RECV_BUFLEN);
     memcpy(buff_clone, buff, BT_RECV_BUFLEN);
 
-    bt_job_params_t params = {
-      .sock = in_sock,
-      .buff = buff_clone,
-      .buflen = buflen,
-      .from_addr = &si_other,
-      .from_addr_len = other_len
-    };
+    bt_job_params_t *params = (bt_job_params_t *)
+      malloc(sizeof(bt_job_params_t));
 
-    if (g_thread_pool_push(pool, &params, NULL)) {
+    params->sock = in_sock;
+    params->buff = buff_clone;
+    params->buflen = buflen;
+    params->from_addr = &si_other;
+    params->from_addr_len = other_len;
+
+    if (g_thread_pool_push(pool, params, NULL)) {
       syslog(LOG_DEBUG, "Successfully pushed job to thread pool");
     }
   }

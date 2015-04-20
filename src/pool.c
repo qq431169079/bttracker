@@ -110,6 +110,7 @@ void bt_request_processor(void *job_params, void *pool_params) {
 
   /* Frees the cloned input buffer. */
   free(params->buff);
+  free(params);
 }
 
 GThreadPool *bt_new_request_processor_pool(bt_config_t *config) {
