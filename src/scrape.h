@@ -32,6 +32,8 @@
 #define BTTRACKER_SCRAPE_H_
 
 /* Returns the response data to a scrape request. */
-bt_response_buffer_t *bt_handle_scrape(const bt_req_t *request, bt_config_t *config, char *buff, size_t buflen, redisContext *redis);
+bt_response_buffer_t *bt_handle_scrape(const bt_req_t *request, bt_config_t *config,
+                                       char *buff, size_t buflen,
+                                       redisContext *redis);
 
 #endif // BTTRACKER_SCRAPE_H_

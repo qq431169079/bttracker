@@ -28,21 +28,30 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-bool bt_valid_request(redisContext *redis, bt_config_t *config, const bt_req_t *req) {
+bool bt_valid_request(redisContext *redis, bt_config_t *config,
+                       const bt_req_t *req, size_t packetlen) {
   switch (req->action) {
   case BT_ACTION_CONNECT:
-    if (req->connection_id == BT_PROTOCOL_ID) {
+    if (req->connection_id == BT_PROTOCOL_ID && packetlen >= 16) {
       return true;
     }
-    syslog(LOG_ERR, "Connection ID does not match the protocol ID");
+    syslog(LOG_ERR, "Connection packet malformed or with invalid protocol ID");
     break;
 
   case BT_ACTION_ANNOUNCE:
-  case BT_ACTION_SCRAPE:
-    if (bt_connection_valid(redis, config, req->connection_id)) {
+    if (packetlen >= 20 && bt_connection_valid(redis, config,
+                                               req->connection_id)) {
       return true;
     }
-    syslog(LOG_ERR, "Connection ID %" PRId64 " not valid", req->connection_id);
+    syslog(LOG_ERR, "Invalid announce packet");
+    break;
+
+  case BT_ACTION_SCRAPE:
+    if (packetlen >= 8 && bt_connection_valid(redis, config,
+                                                     req->connection_id)) {
+      return true;
+    }
+    syslog(LOG_ERR, "Invalid scrape packet");
     break;
 
   default:

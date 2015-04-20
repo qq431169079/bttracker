@@ -35,7 +35,8 @@
 #define BT_ACTIVE_CONNECTION_TTL (uint8_t) 120
 
 /* Returns the response data to a connection request. */
-bt_response_buffer_t *bt_handle_connection(bt_req_t *request, bt_config_t *config, redisContext *redis);
+bt_response_buffer_t *bt_handle_connection(bt_req_t *request, bt_config_t *config,
+                                           size_t buflen, redisContext *redis);
 
 /*
  * Thread that purges all connections older than 2 minutes. The argument `data`

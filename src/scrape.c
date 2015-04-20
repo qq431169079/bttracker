@@ -64,7 +64,7 @@ bt_response_buffer_t *bt_handle_scrape(const bt_req_t *request,
                                        size_t buflen, redisContext *redis) {
 
   /* Ignores this request if it's not valid. */
-  if (!bt_valid_request(redis, config, request)) {
+  if (!bt_valid_request(redis, config, request, buflen)) {
     return NULL;
   }
 

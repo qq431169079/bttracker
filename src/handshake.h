@@ -32,6 +32,7 @@
 #define BTTRACKER_HANDSHAKE_H_
 
 /* Returns whether the incoming request should be accepted. */
-bool bt_valid_request(redisContext *redis, bt_config_t *config, const bt_req_t *req);
+bool bt_valid_request(redisContext *redis, bt_config_t *config,
+                      const bt_req_t *req, size_t packetlen);
 
 #endif // BTTRACKER_HANDSHAKE_H_

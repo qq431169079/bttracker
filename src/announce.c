@@ -81,13 +81,14 @@ bt_response_buffer_t *bt_serialize_announce_response(bt_announce_resp_t* respons
 
 bt_response_buffer_t *bt_handle_announce(const bt_req_t *request,
                                          bt_config_t *config, const char *buff,
+                                         size_t buflen,
                                          struct sockaddr_in *client_addr,
                                          redisContext *redis) {
   bt_list_t *peers;
   int peer_count = 0;
 
   /* Ignores this request if it's not valid. */
-  if (!bt_valid_request(redis, config, request)) {
+  if (!bt_valid_request(redis, config, request, buflen)) {
     return NULL;
   }
 

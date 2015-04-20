@@ -50,11 +50,12 @@ bt_response_buffer_t *bt_serialize_connection_response(bt_connection_resp_t *res
   return resp_buffer;
 }
 
-bt_response_buffer_t *bt_handle_connection(bt_req_t *request, bt_config_t *config, redisContext *redis) {
+bt_response_buffer_t *bt_handle_connection(bt_req_t *request, bt_config_t *config,
+                                           size_t buflen, redisContext *redis) {
   syslog(LOG_DEBUG, "Handling connection");
 
   /* Ignores this request if it's not valid. */
-  if (!bt_valid_request(redis, config, request)) {
+  if (!bt_valid_request(redis, config, request, buflen)) {
     return NULL;
   }
 

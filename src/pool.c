@@ -78,15 +78,17 @@ void bt_request_processor(void *job_params, void *pool_params) {
   /* Dispatches the request to the appropriate handler function. */
   switch (request.action) {
   case BT_ACTION_CONNECT:
-    resp_buffer = bt_handle_connection(&request, config, redis);
+    resp_buffer = bt_handle_connection(&request, config, params->buflen, redis);
     break;
 
   case BT_ACTION_ANNOUNCE:
-    resp_buffer = bt_handle_announce(&request, config, params->buff, params->from_addr, redis);
+    resp_buffer = bt_handle_announce(&request, config, params->buff,
+      params->buflen, params->from_addr, redis);
     break;
 
   case BT_ACTION_SCRAPE:
-    resp_buffer = bt_handle_scrape(&request, config, params->buff, params->buflen, redis);
+    resp_buffer = bt_handle_scrape(&request, config, params->buff,
+      params->buflen, redis);
     break;
 
   case BT_ACTION_ERROR:
