@@ -5,6 +5,8 @@
 BtTracker is a [BEP-15](http://www.bittorrent.org/beps/bep_0015.html) (UDP
 Tracker Protocol for BitTorrent) implementation in C.
 
+**Disclaimer:** This is experimental software. Do not use it in production.
+
 ## Features
 
 * Uses Redis as data storage
