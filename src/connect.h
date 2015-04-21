@@ -35,13 +35,15 @@
 #define BT_ACTIVE_CONNECTION_TTL ((uint8_t) 120)
 
 /* Returns the response data to a connection request. */
-bt_response_buffer_t *bt_handle_connection(bt_req_t *request, bt_config_t *config,
-                                           size_t buflen, redisContext *redis);
+bt_response_buffer_t *
+bt_handle_connection(bt_req_t *request, const bt_config_t *config,
+                     size_t buflen, redisContext *redis);
 
 /*
  * Thread that purges all connections older than 2 minutes. The argument `data`
  * is a pointer to a `bt_connection_purge_data_t` object.
  */
-void *bt_remove_old_connections_thread(void *data);
+void *
+bt_remove_old_connections_thread(void *data);
 
 #endif // BTTRACKER_CONNECT_H_

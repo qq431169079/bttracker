@@ -28,7 +28,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-int64_t bt_random_int64(void) {
+int64_t
+bt_random_int64(void)
+{
   int64_t ran = 0;
 
   /* Assume rand() has at least 12 bits of precision. */
@@ -39,7 +41,9 @@ int64_t bt_random_int64(void) {
   return ran;
 }
 
-uint32_t randr(uint32_t min, uint32_t max) {
-  double scaled = (double)rand()/RAND_MAX;
-  return (max - min +1)*scaled + min;
+uint32_t
+randr(uint32_t min, uint32_t max)
+{
+  double scaled = (double) rand() / RAND_MAX;
+  return (max - min+1) * scaled + min;
 }

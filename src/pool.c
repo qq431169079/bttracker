@@ -28,12 +28,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-void bt_free_redis(void *redis) {
+void
+bt_free_redis(void *redis)
+{
   syslog(LOG_DEBUG, "Disconnecting from Redis");
   redisFree((redisContext *) redis);
 }
 
-void bt_request_processor(void *job_params, void *pool_params) {
+void
+bt_request_processor(void *job_params, void *pool_params)
+{
   static GPrivate redis_key = G_PRIVATE_INIT(bt_free_redis);
 
   /* Data to be sent to the client. */
@@ -113,11 +117,12 @@ void bt_request_processor(void *job_params, void *pool_params) {
   free(params);
 }
 
-GThreadPool *bt_new_request_processor_pool(bt_config_t *config) {
+GThreadPool *
+bt_new_request_processor_pool(bt_config_t *config)
+{
   syslog(LOG_DEBUG, "Creating thread pool with %d workers", config->thread_max);
 
   g_thread_pool_set_max_idle_time(config->thread_max_idle_time * 1000);
-
   return g_thread_pool_new(bt_request_processor, config,
                            config->thread_max, true, NULL);
 }

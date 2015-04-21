@@ -28,9 +28,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-void bt_update_peer_list(redisContext *redis, bt_config_t *config, bt_announce_req_t *announce_request,
-                         struct sockaddr_in *client_addr, char *info_hash_str, bool is_seeder) {
-
+void
+bt_update_peer_list(redisContext *redis, const bt_config_t *config,
+                    bt_announce_req_t *announce_request,
+                    struct sockaddr_in *client_addr,
+                    char *info_hash_str, bool is_seeder)
+{
   bt_peer_t *peer = NULL;
   int8_t *peer_id = announce_request->peer_id;
 
@@ -44,30 +47,30 @@ void bt_update_peer_list(redisContext *redis, bt_config_t *config, bt_announce_r
     break;
 
   default:
-    peer = bt_new_peer(announce_request, (uint32_t) ntohl(client_addr->sin_addr.s_addr));
+    peer = bt_new_peer(announce_request,
+                       (uint32_t) ntohl(client_addr->sin_addr.s_addr));
     bt_insert_peer(redis, config, info_hash_str, peer_id, peer, is_seeder);
-
     free(peer);
   }
 }
 
-bt_response_buffer_t *bt_serialize_announce_response(bt_announce_resp_t* response_data,
-                                                     int peer_count,
-                                                     bt_list_t *peers) {
-
-  /* Creates the object where the serialized information will be written to. */
+bt_response_buffer_t *
+bt_serialize_announce_response(bt_announce_resp_t* response_data,
+                               int peer_count, GList *peers)
+{
+  /* Creates the object where the serialized data will be written to. */
   size_t resp_length = 20 + peer_count * 6;
   bt_response_buffer_t *resp_buffer = (bt_response_buffer_t *)
     malloc(sizeof(bt_response_buffer_t));
 
-  if (resp_buffer == NULL) {
+  if (NULL == resp_buffer) {
     syslog(LOG_ERR, "Cannot allocate memory for response buffer");
     exit(BT_EXIT_MALLOC_ERROR);
   }
 
   /* Serializes the response. */
   resp_buffer->length = resp_length;
-  resp_buffer->data = (char *) malloc(resp_length);
+  resp_buffer->data   = (char *) malloc(resp_length);
 
   bt_write_announce_response_data(resp_buffer->data, response_data);
 
@@ -79,12 +82,12 @@ bt_response_buffer_t *bt_serialize_announce_response(bt_announce_resp_t* respons
   return resp_buffer;
 }
 
-bt_response_buffer_t *bt_handle_announce(const bt_req_t *request,
-                                         bt_config_t *config, const char *buff,
-                                         size_t buflen,
-                                         struct sockaddr_in *client_addr,
-                                         redisContext *redis) {
-  bt_list_t *peers;
+bt_response_buffer_t *
+bt_handle_announce(const bt_req_t *request, const bt_config_t *config,
+                   const char *buff, size_t buflen,
+                   struct sockaddr_in *client_addr, redisContext *redis)
+{
+  GList *peers;
   int peer_count = 0;
 
   /* Ignores this request if it's not valid. */
@@ -100,7 +103,8 @@ bt_response_buffer_t *bt_handle_announce(const bt_req_t *request,
   char *info_hash_str;
   bt_bytearray_to_hexarray(announce_request.info_hash, 20, &info_hash_str);
 
-  syslog(LOG_DEBUG, "Handling announce. Event = %" PRId32, announce_request.event);
+  syslog(LOG_DEBUG, "Handling announce. Event = %" PRId32,
+         announce_request.event);
 
   /* Checks whether the announced info hash is blacklisted. */
   if (bt_info_hash_blacklisted(redis, info_hash_str, config)) {
@@ -113,7 +117,8 @@ bt_response_buffer_t *bt_handle_announce(const bt_req_t *request,
   bool is_seeder = announce_request.left == 0;
 
   /* Updates the list of peers by updating or removing the requesting peer. */
-  bt_update_peer_list(redis, config, &announce_request, client_addr, info_hash_str, is_seeder);
+  bt_update_peer_list(redis, config, &announce_request, client_addr,
+                      info_hash_str, is_seeder);
 
   /* Number of peers to retrieve from the swarm. */
   int32_t num_want = announce_request.num_want;
@@ -124,13 +129,15 @@ bt_response_buffer_t *bt_handle_announce(const bt_req_t *request,
    * First, if the requesting peer is a seeder, we try to get all leechers.
    * Similarly, if the peer is a leecher, we try to get all seeders.
    */
-  peers = bt_peer_list(redis, config, info_hash_str, num_want,  &peer_count, !is_seeder);
+  peers = bt_peer_list(redis, config, info_hash_str, num_want,
+                       &peer_count, !is_seeder);
 
   /* Fallbacks to sibling peers in order to fill the gap. */
   if (peer_count < num_want) {
     int complement_count = 0;
-    bt_list_t *complement = bt_peer_list(redis, config, info_hash_str, (num_want - peer_count),
-                                         &complement_count, is_seeder);
+    GList *complement =
+      bt_peer_list(redis, config, info_hash_str, (num_want - peer_count),
+                   &complement_count, is_seeder);
 
     /* There are new peers to add to the previous list. */
     if (complement != NULL && complement_count > 0) {

@@ -28,25 +28,26 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-bt_response_buffer_t *bt_serialize_scrape_response(bt_scrape_resp_t *response_data) {
-
+bt_response_buffer_t *
+bt_serialize_scrape_response(bt_scrape_resp_t *response_data)
+{
   int num_entries = g_list_length(response_data->scrape_entries);
 
   /* Creates the object where the serialized information will be written to. */
   size_t resp_length = 8 + num_entries * 12;
-  bt_response_buffer_t *resp_buffer = (bt_response_buffer_t *)
-    malloc(sizeof(bt_response_buffer_t));
+  bt_response_buffer_t *resp_buffer =
+    (bt_response_buffer_t *) malloc(sizeof(bt_response_buffer_t));
 
-  if (resp_buffer == NULL) {
+  if (NULL == resp_buffer) {
     syslog(LOG_ERR, "Cannot allocate memory for response buffer");
     exit(BT_EXIT_MALLOC_ERROR);
   }
 
   /* Serializes the response. */
   resp_buffer->length = resp_length;
-  resp_buffer->data = (char *) malloc(resp_length);
+  resp_buffer->data   = (char *) malloc(resp_length);
 
-  if (resp_buffer->data == NULL) {
+  if (NULL == resp_buffer->data) {
     syslog(LOG_ERR, "Cannot allocate memory for response buffer data");
     exit(BT_EXIT_MALLOC_ERROR);
   }
@@ -59,9 +60,10 @@ bt_response_buffer_t *bt_serialize_scrape_response(bt_scrape_resp_t *response_da
   return resp_buffer;
 }
 
-bt_response_buffer_t *bt_handle_scrape(const bt_req_t *request,
-                                       bt_config_t *config, char *buff,
-                                       size_t buflen, redisContext *redis) {
+bt_response_buffer_t *
+bt_handle_scrape(const bt_req_t *request, const bt_config_t *config,
+                 char *buff, size_t buflen, redisContext *redis)
+{
 
   /* Ignores this request if it's not valid. */
   if (!bt_valid_request(redis, config, request, buflen)) {
@@ -74,7 +76,7 @@ bt_response_buffer_t *bt_handle_scrape(const bt_req_t *request,
 
   syslog(LOG_DEBUG, "Handling scrape");
 
-  bt_list_t *scrape_entries = NULL;
+  GList *scrape_entries = NULL;
 
   for (uint8_t i = 0; i < scrape_request.info_hash_len; i++) {
     char *info_hash_str;

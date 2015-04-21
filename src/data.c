@@ -28,10 +28,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-void bt_bytearray_to_hexarray(int8_t *bin, size_t binsz, char **result) {
+void
+bt_bytearray_to_hexarray(int8_t *bin, size_t binsz, char **result)
+{
   const char *hex_str = "0123456789abcdef";
 
-  *result = (char *)malloc(binsz * 2 + 1);
+  *result = (char *) malloc(binsz * 2 + 1);
   (*result)[binsz * 2] = 0;
 
   if (!binsz) {
@@ -44,7 +46,9 @@ void bt_bytearray_to_hexarray(int8_t *bin, size_t binsz, char **result) {
   }
 }
 
-bool bt_load_config(const char *filename, bt_config_t *config) {
+bool
+bt_load_config(const char *filename, bt_config_t *config)
+{
   GKeyFile *keyfile;
   GKeyFileFlags flags;
   GError *error = NULL;
@@ -60,18 +64,25 @@ bool bt_load_config(const char *filename, bt_config_t *config) {
   }
 
   /* Fills the config data struct, one section at a time. */
-  config->bttracker_debug_mode = g_key_file_get_boolean(keyfile, "BtTracker", "DebugMode", NULL);
-  config->bttracker_addr       = g_key_file_get_string (keyfile, "BtTracker", "Address", NULL);
-  config->bttracker_port       = g_key_file_get_integer(keyfile, "BtTracker", "Port", NULL);
+  config->bttracker_debug_mode =
+    g_key_file_get_boolean(keyfile, "BtTracker", "DebugMode", NULL);
+  config->bttracker_addr       =
+    g_key_file_get_string (keyfile, "BtTracker", "Address", NULL);
+  config->bttracker_port       =
+    g_key_file_get_integer(keyfile, "BtTracker", "Port", NULL);
+  config->thread_max           =
+    g_key_file_get_integer(keyfile, "Threading", "MaxThreads", NULL);
+  config->thread_max_idle_time =
+    g_key_file_get_integer(keyfile, "Threading", "MaxIdleTime", NULL);
+  config->announce_wait_time   =
+    g_key_file_get_integer(keyfile, "Announce",  "WaitTime", NULL);
+  config->announce_peer_ttl    =
+    g_key_file_get_integer(keyfile, "Announce",  "PeerTTL", NULL);
+  config->announce_max_numwant =
+    g_key_file_get_integer(keyfile, "Announce",  "MaxNumWant", NULL);
 
-  config->thread_max           = g_key_file_get_integer(keyfile, "Threading", "MaxThreads", NULL);
-  config->thread_max_idle_time = g_key_file_get_integer(keyfile, "Threading", "MaxIdleTime", NULL);
-
-  config->announce_wait_time   = g_key_file_get_integer(keyfile, "Announce", "WaitTime", NULL);
-  config->announce_peer_ttl    = g_key_file_get_integer(keyfile, "Announce", "PeerTTL", NULL);
-  config->announce_max_numwant = g_key_file_get_integer(keyfile, "Announce", "MaxNumWant", NULL);
-
-  char *info_hash_restriction_str = g_key_file_get_string(keyfile, "Announce", "InfoHashRestriction", NULL);
+  char *info_hash_restriction_str =
+    g_key_file_get_string(keyfile,  "Announce",  "InfoHashRestriction", NULL);
 
   if (strcmp(info_hash_restriction_str, "whitelist") == 0) {
     config->info_hash_restriction = BT_RESTRICTION_WHITELIST;
@@ -83,18 +94,25 @@ bool bt_load_config(const char *filename, bt_config_t *config) {
 
   free(info_hash_restriction_str);
 
-  config->redis_host       = g_key_file_get_string(keyfile,  "Redis", "Host", NULL);
-  config->redis_port       = g_key_file_get_integer(keyfile, "Redis", "Port", NULL);
-  config->redis_timeout    = g_key_file_get_integer(keyfile, "Redis", "Timeout", NULL);
-  config->redis_db         = g_key_file_get_integer(keyfile, "Redis", "DB", NULL);
-  config->redis_key_prefix = g_key_file_get_string(keyfile,  "Redis", "KeyPrefix", NULL);
+  config->redis_host       =
+    g_key_file_get_string(keyfile,  "Redis", "Host", NULL);
+  config->redis_port       =
+    g_key_file_get_integer(keyfile, "Redis", "Port", NULL);
+  config->redis_timeout    =
+    g_key_file_get_integer(keyfile, "Redis", "Timeout", NULL);
+  config->redis_db         =
+    g_key_file_get_integer(keyfile, "Redis", "DB", NULL);
+  config->redis_key_prefix =
+    g_key_file_get_string(keyfile,  "Redis", "KeyPrefix", NULL);
 
   g_key_file_free(keyfile);
 
   return true;
 }
 
-redisContext *bt_redis_connect(const char *host, int port, long timeout, int db) {
+redisContext *
+bt_redis_connect(const char *host, int port, long timeout, int db)
+{
   redisContext *conn;
   redisReply *reply;
   struct timeval timeout_val = {0, timeout};
@@ -102,7 +120,7 @@ redisContext *bt_redis_connect(const char *host, int port, long timeout, int db)
   syslog(LOG_DEBUG, "Connecting to Redis instance at %s:%d[%d]", host, port, db);
   conn = redisConnectWithTimeout(host, port, timeout_val);
 
-  if (conn == NULL) {
+  if (NULL == conn) {
     syslog(LOG_ERR, "Connection error: can't allocate conn context");
     return NULL;
   }
@@ -126,7 +144,9 @@ redisContext *bt_redis_connect(const char *host, int port, long timeout, int db)
   return conn;
 }
 
-bool bt_redis_ping(redisContext *redis) {
+bool
+bt_redis_ping(redisContext *redis)
+{
   bool ok = false;
   redisReply *reply;
 
@@ -140,20 +160,22 @@ bool bt_redis_ping(redisContext *redis) {
   return ok;
 }
 
-void bt_insert_connection(redisContext *redis, const bt_config_t *config,
-                          int64_t connection_id) {
+void
+bt_insert_connection(redisContext *redis, const bt_config_t *config,
+                     int64_t connection_id)
+{
   redisReply *reply;
 
   reply = redisCommand(redis, "SETEX %s:conn:%b %d 1",
                        config->redis_key_prefix, &connection_id,
                        sizeof(int64_t), BT_ACTIVE_CONNECTION_TTL);
 
-  if (reply == NULL) {
+  if (NULL == reply) {
     syslog(LOG_ERR, "Got a NULL reply from Redis");
     return;
   }
 
-  if (reply->type == REDIS_REPLY_ERROR) {
+  if (REDIS_REPLY_ERROR == reply->type) {
     syslog(LOG_ERR, "Cannot store connection");
   } else {
     syslog(LOG_DEBUG, "Connection stored successfully");
@@ -162,15 +184,18 @@ void bt_insert_connection(redisContext *redis, const bt_config_t *config,
   freeReplyObject(reply);
 }
 
-bool bt_connection_valid(redisContext *redis, const bt_config_t *config,
-                         int64_t connection_id) {
+bool
+bt_connection_valid(redisContext *redis, const bt_config_t *config,
+                    int64_t connection_id)
+{
   bool valid = false;
   redisReply *reply;
 
   reply = redisCommand(redis, "GET %s:conn:%b",
-                       config->redis_key_prefix, &connection_id, sizeof(int64_t));
+                       config->redis_key_prefix, &connection_id,
+                       sizeof(int64_t));
 
-  if (reply == NULL) {
+  if (NULL == reply) {
     syslog(LOG_ERR, "Got a NULL reply from Redis");
     return false;
   }
@@ -181,20 +206,24 @@ bool bt_connection_valid(redisContext *redis, const bt_config_t *config,
   return valid;
 }
 
-bt_peer_t *bt_new_peer(bt_announce_req_t *request, uint32_t sockaddr) {
+bt_peer_t *
+bt_new_peer(bt_announce_req_t *request, uint32_t sockaddr)
+{
   bt_peer_t *peer = (bt_peer_t *) malloc(sizeof(bt_peer_t));
 
-  peer->key = request->key;
+  peer->key        = request->key;
   peer->downloaded = request->downloaded;
-  peer->uploaded = request->uploaded;
-  peer->left = request->left;
-  peer->port = request->port;
-  peer->ipv4_addr = request->ipv4_addr == 0 ? sockaddr : request->ipv4_addr;
+  peer->uploaded   = request->uploaded;
+  peer->left       = request->left;
+  peer->port       = request->port;
+  peer->ipv4_addr  = request->ipv4_addr == 0 ? sockaddr : request->ipv4_addr;
 
   return peer;
 }
 
-bt_peer_addr_t *bt_new_peer_addr(uint32_t ipv4_addr, uint16_t port) {
+bt_peer_addr_t *
+bt_new_peer_addr(uint32_t ipv4_addr, uint16_t port)
+{
   bt_peer_addr_t *peer_addr = (bt_peer_addr_t *) malloc(sizeof(bt_peer_addr_t));
 
   peer_addr->ipv4_addr = ipv4_addr;
@@ -203,9 +232,11 @@ bt_peer_addr_t *bt_new_peer_addr(uint32_t ipv4_addr, uint16_t port) {
   return peer_addr;
 }
 
-void bt_insert_peer(redisContext *redis, const bt_config_t *config,
-                    const char *info_hash_str, const int8_t *peer_id,
-                    const bt_peer_t *peer_data, bool is_seeder) {
+void
+bt_insert_peer(redisContext *redis, const bt_config_t *config,
+               const char *info_hash_str, const int8_t *peer_id,
+               const bt_peer_t *peer_data, bool is_seeder)
+{
   redisReply *reply;
   char *peer_prefix = is_seeder ? "sd" : "lc";
 
@@ -214,12 +245,12 @@ void bt_insert_peer(redisContext *redis, const bt_config_t *config,
                        peer_prefix, peer_id, (size_t) 20,
                        config->announce_peer_ttl, peer_data, sizeof(bt_peer_t));
 
-  if (reply == NULL) {
+  if (NULL == reply) {
     syslog(LOG_ERR, "Got a NULL reply from Redis");
     return;
   }
 
-  if (reply->type == REDIS_REPLY_ERROR) {
+  if (REDIS_REPLY_ERROR == reply->type) {
     syslog(LOG_ERR, "Cannot store peer data");
   } else {
     syslog(LOG_DEBUG, "Peer data stored successfully");
@@ -228,9 +259,11 @@ void bt_insert_peer(redisContext *redis, const bt_config_t *config,
   freeReplyObject(reply);
 }
 
-void bt_remove_peer(redisContext *redis, const bt_config_t *config,
-                    const char *info_hash_str, const int8_t *peer_id,
-                    bool is_seeder) {
+void
+bt_remove_peer(redisContext *redis, const bt_config_t *config,
+               const char *info_hash_str, const int8_t *peer_id,
+               bool is_seeder)
+{
   redisReply *reply;
   char *peer_prefix = is_seeder ? "sd" : "lc";
 
@@ -238,12 +271,12 @@ void bt_remove_peer(redisContext *redis, const bt_config_t *config,
                        config->redis_key_prefix, info_hash_str,
                        peer_prefix, peer_id, (size_t) 20);
 
-  if (reply == NULL) {
+  if (NULL == reply) {
     syslog(LOG_ERR, "Got a NULL reply from Redis");
     return;
   }
 
-  if (reply->type == REDIS_REPLY_INTEGER && reply->integer == 1) {
+  if (REDIS_REPLY_INTEGER == reply->type && 1 == reply->integer) {
     syslog(LOG_DEBUG, "Peer data removed successfully");
   } else {
     syslog(LOG_ERR, "Cannot remove peer data");
@@ -252,20 +285,23 @@ void bt_remove_peer(redisContext *redis, const bt_config_t *config,
   freeReplyObject(reply);
 }
 
-void bt_promote_peer(redisContext *redis, const bt_config_t *config,
-                     const char *info_hash_str, const int8_t *peer_id) {
+void
+bt_promote_peer(redisContext *redis, const bt_config_t *config,
+                const char *info_hash_str, const int8_t *peer_id)
+{
   redisReply *reply;
 
   reply = redisCommand(redis, "RENAME %s:pr:%s:lc:%b %s:pr:%s:sd:%b",
-                       config->redis_key_prefix, info_hash_str, peer_id, (size_t) 20,
-                       config->redis_key_prefix, info_hash_str, peer_id, (size_t) 20);
+                       config->redis_key_prefix, info_hash_str, peer_id,
+                       (size_t) 20, config->redis_key_prefix, info_hash_str,
+                       peer_id, (size_t) 20);
 
-  if (reply == NULL) {
+  if (NULL == reply) {
     syslog(LOG_ERR, "Got a NULL reply from Redis");
     return;
   }
 
-  if (reply->type == REDIS_REPLY_ERROR) {
+  if (REDIS_REPLY_ERROR == reply->type) {
     syslog(LOG_ERR, "Cannot promote peer");
   } else {
     syslog(LOG_DEBUG, "Peer promoted from leecher to seeder");
@@ -277,27 +313,31 @@ void bt_promote_peer(redisContext *redis, const bt_config_t *config,
   freeReplyObject(reply);
 }
 
-void bt_increment_downloads(redisContext *redis, const bt_config_t *config,
-                            const char *info_hash_str) {
+void
+bt_increment_downloads(redisContext *redis, const bt_config_t *config,
+                       const char *info_hash_str)
+{
   redisReply *reply;
 
   reply = redisCommand(redis, "HINCRBY %s:ih:%s downs 1",
                        config->redis_key_prefix, info_hash_str);
 
-  if (reply == NULL) {
+  if (NULL == reply) {
     syslog(LOG_ERR, "Got a NULL reply from Redis");
     return;
   }
 
-  if (reply->type == REDIS_REPLY_INTEGER) {
+  if (REDIS_REPLY_INTEGER == reply->type) {
     syslog(LOG_DEBUG, "Updated download counter for torrent");
   }
 
   freeReplyObject(reply);
 }
 
-bool bt_info_hash_blacklisted(redisContext *redis, const char *info_hash_str,
-                              const bt_config_t *config) {
+bool
+bt_info_hash_blacklisted(redisContext *redis, const char *info_hash_str,
+                         const bt_config_t *config)
+{
   redisReply *reply;
   bool blacklisted = true;
 
@@ -306,26 +346,24 @@ bool bt_info_hash_blacklisted(redisContext *redis, const char *info_hash_str,
     reply = redisCommand(redis, "SISMEMBER %s:ih:wl %s",
                          config->redis_key_prefix, info_hash_str);
 
-    if (reply == NULL) {
+    if (NULL == reply) {
       syslog(LOG_ERR, "Got a NULL reply from Redis");
     } else {
-      blacklisted = (reply->type == REDIS_REPLY_INTEGER && reply->integer == 0);
+      blacklisted = (REDIS_REPLY_INTEGER == reply->type && 0 == reply->integer);
       freeReplyObject(reply);
     }
-
     break;
 
   case BT_RESTRICTION_BLACKLIST:
     reply = redisCommand(redis, "SISMEMBER %s:ih:bl %s",
                          config->redis_key_prefix, info_hash_str);
 
-    if (reply == NULL) {
+    if (NULL == reply) {
       syslog(LOG_ERR, "Got a NULL reply from Redis");
     } else {
-      blacklisted = (reply->type == REDIS_REPLY_INTEGER && reply->integer > 0);
+      blacklisted = (REDIS_REPLY_INTEGER == reply->type && reply->integer > 0);
       freeReplyObject(reply);
     }
-
     break;
 
   case BT_RESTRICTION_NONE:
@@ -336,8 +374,10 @@ bool bt_info_hash_blacklisted(redisContext *redis, const char *info_hash_str,
 }
 
 /* Fills `stats` with the latests stats for a torrent. */
-void bt_get_torrent_stats(redisContext *redis, const bt_config_t *config,
-                          const char *info_hash_str, bt_torrent_stats_t *stats) {
+void
+bt_get_torrent_stats(redisContext *redis, const bt_config_t *config,
+                     const char *info_hash_str, bt_torrent_stats_t *stats)
+{
   redisReply *reply;
 
   /* Counts the number of seeders. */
@@ -374,13 +414,15 @@ void bt_get_torrent_stats(redisContext *redis, const bt_config_t *config,
   }
 }
 
-bt_list_t *bt_peer_list(redisContext *redis, const bt_config_t *config,
-                        const char *info_hash_str, int32_t num_want,
-                        int *peer_count, bool seeder) {
+GList *
+bt_peer_list(redisContext *redis, const bt_config_t *config,
+             const char *info_hash_str, int32_t num_want,
+             int *peer_count, bool seeder)
+{
   redisReply *reply;
 
   int count = 0;
-  bt_list_t *list = NULL;
+  GList *list = NULL;
 
   /* We give seeders for leechers, and leechers for seeders. */
   char *peer_prefix = seeder ? "sd" : "lc";
@@ -388,12 +430,12 @@ bt_list_t *bt_peer_list(redisContext *redis, const bt_config_t *config,
   reply = redisCommand(redis, "KEYS %s:pr:%s:%s:*",
                        config->redis_key_prefix, info_hash_str, peer_prefix);
 
-  if (reply == NULL) {
+  if (NULL == reply) {
     syslog(LOG_ERR, "Got a NULL reply from Redis");
     return NULL;
   }
 
-  if (reply->type == REDIS_REPLY_ARRAY) {
+  if (REDIS_REPLY_ARRAY == reply->type) {
     size_t total_keys = reply->elements;
     int i, upper_index = total_keys > num_want ? num_want : total_keys;
 

@@ -28,19 +28,22 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-bt_response_buffer_t *bt_serialize_connection_response(bt_connection_resp_t *response_data) {
-  bt_response_buffer_t *resp_buffer = (bt_response_buffer_t *) malloc(sizeof(bt_response_buffer_t));
+bt_response_buffer_t *
+bt_serialize_connection_response(bt_connection_resp_t *response_data)
+{
+  bt_response_buffer_t *resp_buffer =
+    (bt_response_buffer_t *) malloc(sizeof(bt_response_buffer_t));
 
-  if (resp_buffer == NULL) {
+  if (NULL == resp_buffer) {
     syslog(LOG_ERR, "Cannot allocate memory for response object");
     exit(BT_EXIT_MALLOC_ERROR);
   }
 
   /* Serializes the response. */
   resp_buffer->length = 16;
-  resp_buffer->data = (char *) malloc(resp_buffer->length);
+  resp_buffer->data   = (char *) malloc(resp_buffer->length);
 
-  if (resp_buffer->data == NULL) {
+  if (NULL == resp_buffer->data) {
     syslog(LOG_ERR, "Cannot allocate memory for response buffer");
     exit(BT_EXIT_MALLOC_ERROR);
   }
@@ -50,8 +53,10 @@ bt_response_buffer_t *bt_serialize_connection_response(bt_connection_resp_t *res
   return resp_buffer;
 }
 
-bt_response_buffer_t *bt_handle_connection(bt_req_t *request, bt_config_t *config,
-                                           size_t buflen, redisContext *redis) {
+bt_response_buffer_t *
+bt_handle_connection(bt_req_t *request, const bt_config_t *config,
+                     size_t buflen, redisContext *redis)
+{
   syslog(LOG_DEBUG, "Handling connection");
 
   /* Ignores this request if it's not valid. */

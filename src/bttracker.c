@@ -39,10 +39,12 @@ int in_sock;
 struct addrinfo *in_addrinfo;
 
 /* Function that is executed when the signal SIGINT is received. */
-void on_sigint(int signum);
+void
+on_sigint(int signum);
 
-int main(int argc, char *argv[]) {
-
+int
+main(int argc, char *argv[])
+{
   /* Seed the pseudo-random number generator. */
   srand((unsigned) time(NULL));
 
@@ -53,7 +55,8 @@ int main(int argc, char *argv[]) {
   syslog(LOG_INFO, "Welcome to %s, version %s", PACKAGE_NAME, PACKAGE_VERSION);
 
   if (argc != 2) {
-    syslog(LOG_ERR, "Please specify the configuration file. Usage: %s <config_file>", PACKAGE_NAME);
+    syslog(LOG_ERR, "Please specify the configuration file."
+           " Usage: %s <config_file>", PACKAGE_NAME);
     exit(BT_EXIT_CONFIG_ERROR);
   }
 
@@ -78,9 +81,12 @@ int main(int argc, char *argv[]) {
 
   /* Local address where the UDP server socket will bind against. */
   syslog(LOG_DEBUG, "Creating UDP server socket");
-  in_sock = bt_ipv4_udp_sock(config.bttracker_addr, config.bttracker_port, &in_addrinfo);
+  in_sock = bt_ipv4_udp_sock(config.bttracker_addr, config.bttracker_port,
+                             &in_addrinfo);
 
-  syslog(LOG_DEBUG, "Binding UDP socket to local port %d", config.bttracker_port);
+  syslog(LOG_DEBUG, "Binding UDP socket to local port %d",
+         config.bttracker_port);
+
   if (bind(in_sock, in_addrinfo->ai_addr, in_addrinfo->ai_addrlen) == -1) {
     syslog(LOG_ERR, "Error in bind(). Exiting");
     exit(BT_EXIT_NETWORK_ERROR);
@@ -91,7 +97,7 @@ int main(int argc, char *argv[]) {
     size_t buflen = recvfrom(in_sock, buff, BT_RECV_BUFLEN, 0,
                              (struct sockaddr *) &si_other, &other_len);
 
-    if (buflen == -1) {
+    if (-1 == buflen) {
       syslog(LOG_ERR, "Cannot retrieve data from socket. Continuing");
       continue;
     }
@@ -107,10 +113,10 @@ int main(int argc, char *argv[]) {
     bt_job_params_t *params = (bt_job_params_t *)
       malloc(sizeof(bt_job_params_t));
 
-    params->sock = in_sock;
-    params->buff = buff_clone;
-    params->buflen = buflen;
-    params->from_addr = &si_other;
+    params->sock          = in_sock;
+    params->buff          = buff_clone;
+    params->buflen        = buflen;
+    params->from_addr     = &si_other;
     params->from_addr_len = other_len;
 
     if (g_thread_pool_push(pool, params, NULL)) {
@@ -119,7 +125,9 @@ int main(int argc, char *argv[]) {
   }
 }
 
-void on_sigint(int signum) {
+void
+on_sigint(int signum)
+{
   signal(signum, SIG_DFL);
 
   syslog(LOG_DEBUG, "Freeing resources");

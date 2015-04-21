@@ -31,9 +31,6 @@
 #ifndef BTTRACKER_DATA_H_
 #define BTTRACKER_DATA_H_
 
-/* Uses Glib's implementation of a doubly linked list. */
-typedef GList bt_list_t;
-
 /* Flags that identify whether some event is ellegible to be blacklisted. */
 typedef enum {
   BT_RESTRICTION_NONE,
@@ -152,7 +149,7 @@ typedef struct {
 /* Data sent to the client in response to a scrape request. */
 typedef struct {
   _BT_RESPONSE_HEADER_
-  bt_list_t *scrape_entries;
+  GList *scrape_entries;
 } bt_scrape_resp_t;
 
 /* Peer address. */
@@ -182,7 +179,8 @@ typedef struct {
  */
 
 /* Loads configuration file to a `bt_config_t` object. */
-bool bt_load_config(const char *filename, bt_config_t *config);
+bool
+bt_load_config(const char *filename, bt_config_t *config);
 
 
 /*
@@ -190,10 +188,12 @@ bool bt_load_config(const char *filename, bt_config_t *config);
  */
 
 /* Connects to the specified redis instance. */
-redisContext *bt_redis_connect(const char *host, int port, long timeout, int db);
+redisContext *
+bt_redis_connect(const char *host, int port, long timeout, int db);
 
 /* Checks whether the Redis connection is still valid. */
-bool bt_redis_ping(redisContext *redis);
+bool
+bt_redis_ping(redisContext *redis);
 
 
 /*
@@ -201,12 +201,14 @@ bool bt_redis_ping(redisContext *redis);
  */
 
 /* Adds a new connection ID to the hash table of active connections. */
-void bt_insert_connection(redisContext *redis, const bt_config_t *config,
-                          int64_t connection_id);
+void
+bt_insert_connection(redisContext *redis, const bt_config_t *config,
+                     int64_t connection_id);
 
 /* Returns whether this connection id exists. */
-bool bt_connection_valid(redisContext *redis, const bt_config_t *config,
-                         int64_t connection_id);
+bool
+bt_connection_valid(redisContext *redis, const bt_config_t *config,
+                    int64_t connection_id);
 
 
 /*
@@ -214,47 +216,57 @@ bool bt_connection_valid(redisContext *redis, const bt_config_t *config,
  */
 
 /* Converts the info hash byte array to string. */
-void bt_bytearray_to_hexarray(int8_t *bin, size_t binsz, char **result);
+void
+bt_bytearray_to_hexarray(int8_t *bin, size_t binsz, char **result);
 
 /* Increments the number of times a torrent has been downloaded. */
-void bt_increment_downloads(redisContext *redis, const bt_config_t *config,
-                            const char *info_hash_str);
+void
+bt_increment_downloads(redisContext *redis, const bt_config_t *config,
+                       const char *info_hash_str);
 
 /* Returns whether the given torrent is blacklisted. */
-bool bt_info_hash_blacklisted(redisContext *redis, const char *info_hash_str,
-                              const bt_config_t *config);
+bool
+bt_info_hash_blacklisted(redisContext *redis, const char *info_hash_str,
+                         const bt_config_t *config);
 
 /*
  * Peer management.
  */
 
 /* Creates a new `bt_peer_t` containing the peer data from announce request. */
-bt_peer_t *bt_new_peer(bt_announce_req_t *request, uint32_t sockaddr);
+bt_peer_t *
+bt_new_peer(bt_announce_req_t *request, uint32_t sockaddr);
 
 /* Creates a new `bt_peer_addr_t` with the peer address data. */
-bt_peer_addr_t *bt_new_peer_addr(uint32_t ipv4_addr, uint16_t port);
+bt_peer_addr_t *
+bt_new_peer_addr(uint32_t ipv4_addr, uint16_t port);
 
 /* Inserts a peer (seeder or leecher) to the swarm of a torrent. */
-void bt_insert_peer(redisContext *redis, const bt_config_t *config,
-                    const char *info_hash_str, const int8_t *peer_id,
-                    const bt_peer_t *peer_data, bool is_seeder);
+void
+bt_insert_peer(redisContext *redis, const bt_config_t *config,
+               const char *info_hash_str, const int8_t *peer_id,
+               const bt_peer_t *peer_data, bool is_seeder);
 
 /* Removes a peer from the swarm of a torrent. */
-void bt_remove_peer(redisContext *redis, const bt_config_t *config,
-                    const char *info_hash_str, const int8_t *peer_id,
-                    bool is_seeder);
+void
+bt_remove_peer(redisContext *redis, const bt_config_t *config,
+               const char *info_hash_str, const int8_t *peer_id,
+               bool is_seeder);
 
 /* Promotes a peer from leecher to seeder. */
-void bt_promote_peer(redisContext *redis, const bt_config_t *config,
-                     const char *info_hash_str, const int8_t *peer_id);
+void
+bt_promote_peer(redisContext *redis, const bt_config_t *config,
+                const char *info_hash_str, const int8_t *peer_id);
 
 /* Fills `stats` with the latests stats for a torrent. */
-void bt_get_torrent_stats(redisContext *redis, const bt_config_t *config,
-                          const char *info_hash_str, bt_torrent_stats_t *stats);
+void
+bt_get_torrent_stats(redisContext *redis, const bt_config_t *config,
+                     const char *info_hash_str, bt_torrent_stats_t *stats);
 
 /* Returns a random list containing a random subset of leechers or seeders. */
-bt_list_t *bt_peer_list(redisContext *redis, const bt_config_t *config,
-                        const char *info_hash_str, int32_t num_want,
-                        int *peer_count, bool seeder);
+GList *
+bt_peer_list(redisContext *redis, const bt_config_t *config,
+             const char *info_hash_str, int32_t num_want,
+             int *peer_count, bool seeder);
 
 #endif // BTTRACKER_DATA_H_

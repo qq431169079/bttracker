@@ -28,14 +28,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-bool bt_valid_request(redisContext *redis, bt_config_t *config,
-                       const bt_req_t *req, size_t packetlen) {
+bool
+bt_valid_request(redisContext *redis, const bt_config_t *config,
+                 const bt_req_t *req, size_t packetlen)
+{
   switch (req->action) {
   case BT_ACTION_CONNECT:
-    if (req->connection_id == BT_PROTOCOL_ID && packetlen >= 16) {
+    if (BT_PROTOCOL_ID == req->connection_id && packetlen >= 16) {
       return true;
     }
-    syslog(LOG_ERR, "Connection packet malformed or with invalid protocol ID");
+    syslog(LOG_ERR, "Invalid connect packet");
     break;
 
   case BT_ACTION_ANNOUNCE:

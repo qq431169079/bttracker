@@ -32,10 +32,9 @@
 #define BTTRACKER_ANNOUNCE_H_
 
 /* Returns the response data to a announce request. */
-bt_response_buffer_t *bt_handle_announce(const bt_req_t *request,
-                                         bt_config_t *config, const char *buff,
-                                         size_t buflen,
-                                         struct sockaddr_in *client_addr,
-                                         redisContext *redis);
+bt_response_buffer_t *
+bt_handle_announce(const bt_req_t *request, const bt_config_t *config,
+                   const char *buff, size_t buflen,
+                   struct sockaddr_in *client_addr, redisContext *redis);
 
 #endif // BTTRACKER_ANNOUNCE_H_
