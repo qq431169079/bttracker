@@ -367,6 +367,7 @@ bt_info_hash_blacklisted(redisContext *redis, const char *info_hash_str,
     break;
 
   case BT_RESTRICTION_NONE:
+  default:
     blacklisted = false;
   }
 
