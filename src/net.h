@@ -31,8 +31,13 @@
 #ifndef BTTRACKER_NET_H_
 #define BTTRACKER_NET_H_
 
-/* Buffer length used to receive data from clients. */
-#define BT_RECV_BUFLEN 1024
+/*
+ * Buffer length used to receive data from clients. This value was defined
+ * based on the largest packet to be received, which is a scrape request
+ * packet. According to the spec, the maximum number of torrents that can
+ * be sent in a scrape request is about 74, so (74*20)+16 = 1496.
+ */
+#define BT_RECV_BUFLEN (1496)
 
 /* 64-bit integer that identifies the UDP-based tracker protocol. */
 #define BT_PROTOCOL_ID 0x41727101980LL
