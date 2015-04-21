@@ -36,8 +36,15 @@
 #ifdef __APPLE__
 #ifndef HAVE_HTONLL
 #include <libkern/OSByteOrder.h>
-#define ntohll(n) OSSwapBigToHostInt64(n)
-#define htonll(n) OSSwapHostToBigInt64(n)
+
+#ifndef ntohll
+  #define ntohll(n) OSSwapBigToHostInt64(n)
+#endif
+
+#ifndef htonll
+  #define htonll(n) OSSwapHostToBigInt64(n)
+#endif
+
 #define HAVE_HTONLL
 #endif // HAVE_HTONLL
 #endif // __APPLE__
