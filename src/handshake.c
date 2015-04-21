@@ -41,16 +41,16 @@ bt_valid_request(redisContext *redis, const bt_config_t *config,
     break;
 
   case BT_ACTION_ANNOUNCE:
-    if (packetlen >= 20 && bt_connection_valid(redis, config,
-                                               req->connection_id)) {
+    if (packetlen >= 20 &&
+        bt_connection_valid(redis, config, req->connection_id)) {
       return true;
     }
     syslog(LOG_ERR, "Invalid announce packet");
     break;
 
   case BT_ACTION_SCRAPE:
-    if (packetlen >= 8 && bt_connection_valid(redis, config,
-                                                     req->connection_id)) {
+    if (packetlen >= 8 &&
+        bt_connection_valid(redis, config, req->connection_id)) {
       return true;
     }
     syslog(LOG_ERR, "Invalid scrape packet");
