@@ -40,7 +40,7 @@
 #define BT_RECV_BUFLEN (1496)
 
 /* 64-bit integer that identifies the UDP-based tracker protocol. */
-#define BT_PROTOCOL_ID 0x41727101980LL
+#define BT_PROTOCOL_ID (0x41727101980LL)
 
 /* Fills request struct with buffer data. */
 void bt_read_request_data(const char *buffer, bt_req_t *req);

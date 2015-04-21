@@ -32,7 +32,7 @@
 #define BTTRACKER_CONNECT_H_
 
 /* Interval, in seconds, in which a connection ID is considered active. */
-#define BT_ACTIVE_CONNECTION_TTL (uint8_t) 120
+#define BT_ACTIVE_CONNECTION_TTL ((uint8_t) 120)
 
 /* Returns the response data to a connection request. */
 bt_response_buffer_t *bt_handle_connection(bt_req_t *request, bt_config_t *config,
