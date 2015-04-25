@@ -28,74 +28,46 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BTTRACKER_ALLHEADS_H_
-#define BTTRACKER_ALLHEADS_H_
+#ifndef BTTRACKER_CONF_H_
+#define BTTRACKER_CONF_H_
 
-#include <stdio.h>
-#include <string.h>
-#include <sys/time.h>
+/* Flags that identify whether some event is ellegible to be blacklisted. */
+typedef enum {
+  BT_RESTRICTION_NONE,
+  BT_RESTRICTION_WHITELIST,
+  BT_RESTRICTION_BLACKLIST
+} bt_restriction;
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+/* Configuration data. */
+typedef struct {
 
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
+  // Misc options
+  char *bttracker_addr;
+  uint16_t bttracker_port;
+  bool bttracker_debug_mode;
 
-#ifdef STDC_HEADERS
-#include <stdlib.h>
-#endif
+  // Threading options
+  uint16_t thread_max;
+  uint32_t thread_max_idle_time;
 
-#ifdef HAVE_STDBOOL_H
-#include <stdbool.h>
-#endif
+  // Announce options
+  uint32_t announce_wait_time;
+  uint32_t announce_peer_ttl;
+  uint16_t announce_max_numwant;
 
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#include <sys/types.h>
-#endif
+  // Redis options
+  char *redis_host;
+  uint16_t redis_port;
+  uint32_t redis_timeout;
+  uint16_t redis_db;
+  char *redis_key_prefix;
 
-#ifdef HAVE_SYSLOG_H
-#include <syslog.h>
-#endif
+  // Blacklist options
+  bt_restriction info_hash_restriction;
+} bt_config_t;
 
-#ifdef HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
+/* Loads configuration file to a `bt_config_t` object. */
+bool
+bt_load_config(const char *filename, bt_config_t *config);
 
-#ifdef HAVE_ARPA_INET_H
-#include <arpa/inet.h>
-#endif
-
-#ifdef HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif
-
-#ifdef HAVE_NETDB_H
-#include <netdb.h>
-#endif
-
-#ifdef HAVE_PTHREAD
-#include <pthread.h>
-#endif
-
-/* Library headers. */
-#include <glib.h>
-#include <hiredis/hiredis.h>
-
-/* Application headers. */
-#include "byteorder.h"
-#include "random.h"
-#include "conf.h"
-#include "data.h"
-#include "net.h"
-#include "error.h"
-#include "connect.h"
-#include "handshake.h"
-#include "announce.h"
-#include "scrape.h"
-#include "pool.h"
-#include "exit.h"
-
-#endif // BTTRACKER_ALLHEADS_H_
+#endif // BTTRACKER_CONF_H_

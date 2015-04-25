@@ -31,41 +31,6 @@
 #ifndef BTTRACKER_DATA_H_
 #define BTTRACKER_DATA_H_
 
-/* Flags that identify whether some event is ellegible to be blacklisted. */
-typedef enum {
-  BT_RESTRICTION_NONE,
-  BT_RESTRICTION_WHITELIST,
-  BT_RESTRICTION_BLACKLIST
-} bt_restriction;
-
-/* Configuration data. */
-typedef struct {
-
-  // Misc options
-  char *bttracker_addr;
-  uint16_t bttracker_port;
-  bool bttracker_debug_mode;
-
-  // Threading options
-  uint16_t thread_max;
-  uint32_t thread_max_idle_time;
-
-  // Announce options
-  uint32_t announce_wait_time;
-  uint32_t announce_peer_ttl;
-  uint16_t announce_max_numwant;
-
-  // Redis options
-  char *redis_host;
-  uint16_t redis_port;
-  uint32_t redis_timeout;
-  uint16_t redis_db;
-  char *redis_key_prefix;
-
-  // Blacklist options
-  bt_restriction info_hash_restriction;
-} bt_config_t;
-
 /* Fields common to all types of requests. */
 #define _BT_REQUEST_HEADER_  \
   int64_t connection_id;     \
@@ -173,14 +138,6 @@ typedef struct {
   int64_t left;       // Number of bytes left to be downloaded
   uint16_t port;      // Peer port
 } bt_peer_t;
-
-/*
- * Configuration.
- */
-
-/* Loads configuration file to a `bt_config_t` object. */
-bool
-bt_load_config(const char *filename, bt_config_t *config);
 
 
 /*
