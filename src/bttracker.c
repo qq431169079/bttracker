@@ -84,8 +84,8 @@ main(int argc, char *argv[])
   in_sock = bt_ipv4_udp_sock(config.bttracker_addr, config.bttracker_port,
                              &in_addrinfo);
 
-  syslog(LOG_DEBUG, "Binding UDP socket to local port %d",
-         config.bttracker_port);
+  syslog(LOG_DEBUG, "Binding UDP socket to %s:%d",
+         config.bttracker_addr, config.bttracker_port);
 
   if (bind(in_sock, in_addrinfo->ai_addr, in_addrinfo->ai_addrlen) == -1) {
     syslog(LOG_ERR, "Error in bind(). Exiting");
