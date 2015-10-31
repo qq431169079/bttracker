@@ -38,9 +38,9 @@ GThreadPool *pool;
 int in_sock;
 struct addrinfo *in_addrinfo;
 
-/* Function that is executed when the signal SIGINT is received. */
+/* Function that is executed when the signal SIGINT/SIGTERM is received. */
 void
-on_sigint(int signum);
+on_sigterm(int signum);
 
 int
 main(int argc, char *argv[])
@@ -70,7 +70,8 @@ main(int argc, char *argv[])
   }
 
   /* Handle interruption signal (C-c on term). */
-  signal(SIGINT, on_sigint);
+  signal(SIGINT, on_sigterm);
+  signal(SIGTERM, on_sigterm);
 
   /* Creates the thread pool. */
   pool = bt_new_request_processor_pool(&config);
@@ -126,7 +127,7 @@ main(int argc, char *argv[])
 }
 
 void
-on_sigint(int signum)
+on_sigterm(int signum)
 {
   signal(signum, SIG_DFL);
 
@@ -134,9 +135,6 @@ on_sigint(int signum)
 
   /* Terminates the thread pool. */
   g_thread_pool_free(pool, true, true);
-
-  /* Gives some time for the threads to be destroyed. */
-  sleep(1);
 
   /* Closes UDP socket. */
   close(in_sock);
