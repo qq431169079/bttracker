@@ -17,7 +17,7 @@ AM_PROG_AR
 
 # Checks for libraries.
 PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.32.3])
-PKG_CHECK_MODULES([HIREDIS], [hiredis >= 0.13.1])
+PKG_CHECK_MODULES([HIREDIS], [hiredis >= 0.10.1])
 
 # Hiredis library:
 # This library is not distributed with a .pc file, so we cannot use
