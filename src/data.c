@@ -344,7 +344,7 @@ bt_get_torrent_stats(redisContext *redis, const bt_config_t *config,
   }
 
   if (redisGetReply(redis, (void **) &reply) == REDIS_OK) {
-    stats->downloads = strtoimax(reply->str, NULL, 10);
+    stats->downloads = !reply->str ? 0 : strtoimax(reply->str, NULL, 10);
   }
   if (reply != NULL) {
     freeReplyObject(reply);
