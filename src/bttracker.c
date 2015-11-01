@@ -65,9 +65,8 @@ main(int argc, char *argv[])
     exit(BT_EXIT_CONFIG_ERROR);
   }
 
-  if (config.bttracker_debug_mode) {
-    setlogmask(LOG_UPTO(LOG_DEBUG));
-  }
+  /* Sets the desired log level from now on. */
+  setlogmask(LOG_UPTO(config.bttracker_log_level_mask));
 
   /* Handle interruption signal (C-c on term). */
   signal(SIGINT, on_sigterm);

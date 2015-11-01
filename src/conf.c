@@ -46,21 +46,19 @@ bt_load_config(const char *filename, bt_config_t *config)
   }
 
   /* Fills the config data struct, one section at a time. */
-  config->bttracker_debug_mode =
-    g_key_file_get_boolean(keyfile, "BtTracker", "DebugMode", NULL);
-  config->bttracker_addr       =
+  config->bttracker_addr          =
     g_key_file_get_string (keyfile, "BtTracker", "Address", NULL);
-  config->bttracker_port       =
+  config->bttracker_port          =
     g_key_file_get_integer(keyfile, "BtTracker", "Port", NULL);
-  config->thread_max           =
+  config->thread_max              =
     g_key_file_get_integer(keyfile, "Threading", "MaxThreads", NULL);
-  config->thread_max_idle_time =
+  config->thread_max_idle_time    =
     g_key_file_get_integer(keyfile, "Threading", "MaxIdleTime", NULL);
-  config->announce_wait_time   =
+  config->announce_wait_time      =
     g_key_file_get_integer(keyfile, "Announce",  "WaitTime", NULL);
-  config->announce_peer_ttl    =
+  config->announce_peer_ttl       =
     g_key_file_get_integer(keyfile, "Announce",  "PeerTTL", NULL);
-  config->announce_max_numwant =
+  config->announce_max_numwant    =
     g_key_file_get_integer(keyfile, "Announce",  "MaxNumWant", NULL);
 
   char *info_hash_restriction_str =
@@ -74,7 +72,31 @@ bt_load_config(const char *filename, bt_config_t *config)
     config->info_hash_restriction = BT_RESTRICTION_NONE;
   }
 
+  char *log_level_str =
+    g_key_file_get_string (keyfile, "BtTracker", "LogLevel", NULL);
+
+  if (strcmp(log_level_str, "DEBUG") == 0) {
+    config->bttracker_log_level_mask = LOG_DEBUG;
+  } else if (strcmp(log_level_str, "INFO") == 0) {
+    config->bttracker_log_level_mask = LOG_INFO;
+  } else if (strcmp(log_level_str, "NOTICE") == 0) {
+    config->bttracker_log_level_mask = LOG_NOTICE;
+  } else if (strcmp(log_level_str, "WARNING") == 0) {
+    config->bttracker_log_level_mask = LOG_WARNING;
+  } else if (strcmp(log_level_str, "ERR") == 0) {
+    config->bttracker_log_level_mask = LOG_ERR;
+  } else if (strcmp(log_level_str, "CRIT") == 0) {
+    config->bttracker_log_level_mask = LOG_CRIT;
+  } else if (strcmp(log_level_str, "ALERT") == 0) {
+    config->bttracker_log_level_mask = LOG_ALERT;
+  } else if (strcmp(log_level_str, "EMERG") == 0) {
+    config->bttracker_log_level_mask = LOG_EMERG;
+  } else {
+    config->bttracker_log_level_mask = LOG_INFO;
+  }
+
   free(info_hash_restriction_str);
+  free(log_level_str);
 
   config->redis_host       =
     g_key_file_get_string(keyfile,  "Redis", "Host", NULL);

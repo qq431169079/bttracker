@@ -44,7 +44,7 @@ typedef struct {
   // Misc options
   char *bttracker_addr;
   uint16_t bttracker_port;
-  bool bttracker_debug_mode;
+  int bttracker_log_level_mask;
 
   // Threading options
   uint16_t thread_max;
