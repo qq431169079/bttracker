@@ -56,7 +56,7 @@ bt_update_peer_list(redisContext *redis, const bt_config_t *config,
 
 bt_response_buffer_t *
 bt_serialize_announce_response(bt_announce_resp_t* response_data,
-                               int peer_count, GList *peers)
+                               int peer_count, bt_list *peers)
 {
   /* Creates the object where the serialized data will be written to. */
   size_t resp_length = 20 + peer_count * 6;
@@ -77,7 +77,7 @@ bt_serialize_announce_response(bt_announce_resp_t* response_data,
   syslog(LOG_DEBUG, "Sending %d peers in response", peer_count);
   bt_write_announce_peer_data(resp_buffer->data, peers);
 
-  g_list_free_full(peers, free);
+  bt_list_free(peers);
 
   return resp_buffer;
 }
@@ -87,7 +87,7 @@ bt_handle_announce(const bt_req_t *request, const bt_config_t *config,
                    const char *buff, size_t buflen,
                    struct sockaddr_in *client_addr, redisContext *redis)
 {
-  GList *peers;
+  bt_list *peers;
   int peer_count = 0;
 
   /* Ignores this request if it's not valid. */
@@ -135,14 +135,14 @@ bt_handle_announce(const bt_req_t *request, const bt_config_t *config,
   /* Fallbacks to sibling peers in order to fill the gap. */
   if (peer_count < num_want) {
     int complement_count = 0;
-    GList *complement =
+    bt_list *complement =
       bt_peer_list(redis, config, info_hash_str, (num_want - peer_count),
                    &complement_count, is_seeder);
 
     /* There are new peers to add to the previous list. */
     if (complement != NULL && complement_count > 0) {
       peer_count += complement_count;
-      peers = g_list_concat(peers, complement);
+      peers = bt_list_concat(peers, complement);
     }
   }
 

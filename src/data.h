@@ -31,6 +31,16 @@
 #ifndef BTTRACKER_DATA_H_
 #define BTTRACKER_DATA_H_
 
+/* Layer over glib double-linked lists. */
+typedef GList bt_list;
+
+#define bt_list_free(lst)          g_list_free_full(lst, free)
+#define bt_list_length(lst)        g_list_length(lst)
+#define bt_list_prepend(lst, ptr)  g_list_prepend(lst, ptr)
+#define bt_list_reverse(lst)       g_list_reverse(lst)
+#define bt_list_next(lst)          g_list_next(lst)
+#define bt_list_concat(lst1, lst2) g_list_concat(lst1, lst2)
+
 /* Fields common to all types of requests. */
 #define _BT_REQUEST_HEADER_  \
   int64_t connection_id;     \
@@ -114,7 +124,7 @@ typedef struct {
 /* Data sent to the client in response to a scrape request. */
 typedef struct {
   _BT_RESPONSE_HEADER_
-  GList *scrape_entries;
+  bt_list *scrape_entries;
 } bt_scrape_resp_t;
 
 /* Peer address. */
@@ -221,7 +231,7 @@ bt_get_torrent_stats(redisContext *redis, const bt_config_t *config,
                      const char *info_hash_str, bt_torrent_stats_t *stats);
 
 /* Returns a random list containing a random subset of leechers or seeders. */
-GList *
+bt_list *
 bt_peer_list(redisContext *redis, const bt_config_t *config,
              const char *info_hash_str, int32_t num_want,
              int *peer_count, bool seeder);

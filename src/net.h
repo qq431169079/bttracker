@@ -64,7 +64,7 @@ bt_write_announce_response_data(char *resp_buffer, bt_announce_resp_t *resp);
 
 /* Writes the peer data to be sent along the announce response. */
 void
-bt_write_announce_peer_data(char *resp_buffer, GList *peers);
+bt_write_announce_peer_data(char *resp_buffer, bt_list *peers);
 
 /* Fills the scrape request with buffer data. */
 void

@@ -132,9 +132,9 @@ bt_write_announce_response_data(char *resp_buffer, bt_announce_resp_t *resp)
 }
 
 void
-bt_write_announce_peer_data(char *resp_buffer, GList *peers)
+bt_write_announce_peer_data(char *resp_buffer, bt_list *peers)
 {
-  GList *current_peer = peers;
+  bt_list *current_peer = peers;
   int npeer = 0;
 
   while (current_peer != NULL) {
@@ -148,7 +148,7 @@ bt_write_announce_peer_data(char *resp_buffer, GList *peers)
     memcpy(resp_buffer + 20 + 6 * npeer, &peer_addr->ipv4_addr, 4);
     memcpy(resp_buffer + 24 + 6 * npeer++, &peer_addr->port, 2);
 
-    current_peer = g_list_next(current_peer);
+    current_peer = bt_list_next(current_peer);
   }
 }
 
@@ -169,7 +169,7 @@ bt_read_scrape_request_data(const char *buffer, size_t buflen, bt_scrape_req_t *
 void
 bt_write_scrape_response_data(char *resp_buffer, bt_scrape_resp_t *resp)
 {
-  GList *current_entry = resp->scrape_entries;
+  bt_list *current_entry = resp->scrape_entries;
   int nentry = 0;
 
   /* Converts data to network byte order. */
@@ -191,6 +191,6 @@ bt_write_scrape_response_data(char *resp_buffer, bt_scrape_resp_t *resp)
     /* Writes the stats in the response buffer. */
     memcpy(resp_buffer + 8 + 12 * nentry++, entry, sizeof(bt_torrent_stats_t));
 
-    current_entry = g_list_next(current_entry);
+    current_entry = bt_list_next(current_entry);
   }
 }

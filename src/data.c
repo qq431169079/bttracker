@@ -351,7 +351,7 @@ bt_get_torrent_stats(redisContext *redis, const bt_config_t *config,
   }
 }
 
-GList *
+bt_list *
 bt_peer_list(redisContext *redis, const bt_config_t *config,
              const char *info_hash_str, int32_t num_want,
              int *peer_count, bool seeder)
@@ -359,7 +359,7 @@ bt_peer_list(redisContext *redis, const bt_config_t *config,
   redisReply *reply;
 
   int count = 0;
-  GList *list = NULL;
+  bt_list *list = NULL;
 
   /* We give seeders for leechers, and leechers for seeders. */
   char *peer_prefix = seeder ? "sd" : "lc";
@@ -404,7 +404,7 @@ bt_peer_list(redisContext *redis, const bt_config_t *config,
                                                 peer_data->port);
         freeReplyObject(reply);
 
-        list = g_list_prepend(list, addr);
+        list = bt_list_prepend(list, addr);
         count++;
       } else {
         syslog(LOG_INFO, "Unable to get peer data");

@@ -31,7 +31,7 @@
 bt_response_buffer_t *
 bt_serialize_scrape_response(bt_scrape_resp_t *response_data)
 {
-  int num_entries = g_list_length(response_data->scrape_entries);
+  int num_entries = bt_list_length(response_data->scrape_entries);
 
   /* Creates the object where the serialized information will be written to. */
   size_t resp_length = 8 + num_entries * 12;
@@ -55,7 +55,7 @@ bt_serialize_scrape_response(bt_scrape_resp_t *response_data)
   syslog(LOG_DEBUG, "Sending scrape data for %d torrents", num_entries);
   bt_write_scrape_response_data(resp_buffer->data, response_data);
 
-  g_list_free_full(response_data->scrape_entries, free);
+  bt_list_free(response_data->scrape_entries);
 
   return resp_buffer;
 }
@@ -76,7 +76,7 @@ bt_handle_scrape(const bt_req_t *request, const bt_config_t *config,
 
   syslog(LOG_DEBUG, "Handling scrape");
 
-  GList *scrape_entries = NULL;
+  bt_list *scrape_entries = NULL;
 
   for (uint8_t i = 0; i < scrape_request.info_hash_len; i++) {
     char *info_hash_str;
@@ -87,7 +87,7 @@ bt_handle_scrape(const bt_req_t *request, const bt_config_t *config,
       syslog(LOG_DEBUG, "Blacklisted info hash: %s", info_hash_str);
 
       free(info_hash_str);
-      g_list_free_full(scrape_entries, free);
+      bt_list_free(scrape_entries);
 
       return bt_send_error(request, "Blacklisted info hash");
     }
@@ -96,7 +96,7 @@ bt_handle_scrape(const bt_req_t *request, const bt_config_t *config,
       malloc(sizeof(bt_torrent_stats_t));
     bt_get_torrent_stats(redis, config, info_hash_str, stats);
 
-    scrape_entries = g_list_prepend(scrape_entries, stats);
+    scrape_entries = bt_list_prepend(scrape_entries, stats);
 
     free(info_hash_str);
   }
@@ -105,7 +105,7 @@ bt_handle_scrape(const bt_req_t *request, const bt_config_t *config,
   bt_scrape_resp_t response_header = {
     .action = request->action,
     .transaction_id = request->transaction_id,
-    .scrape_entries = g_list_reverse(scrape_entries)
+    .scrape_entries = bt_list_reverse(scrape_entries)
   };
 
   return bt_serialize_scrape_response(&response_header);
