@@ -271,8 +271,8 @@ bt_increment_downloads(redisContext *redis, const bt_config_t *config,
 }
 
 bool
-bt_info_hash_blacklisted(redisContext *redis, const char *info_hash_str,
-                         const bt_config_t *config)
+bt_info_hash_blacklisted(redisContext *redis, const bt_config_t *config,
+                         const char *info_hash_str)
 {
   redisReply *reply;
   bool blacklisted = true;

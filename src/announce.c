@@ -107,7 +107,7 @@ bt_handle_announce(const bt_req_t *request, const bt_config_t *config,
          announce_request.event);
 
   /* Checks whether the announced info hash is blacklisted. */
-  if (bt_info_hash_blacklisted(redis, info_hash_str, config)) {
+  if (bt_info_hash_blacklisted(redis, config, info_hash_str)) {
     syslog(LOG_DEBUG, "Blacklisted info hash: %s", info_hash_str);
     free(info_hash_str);
     return bt_send_error(request, "Blacklisted info hash");

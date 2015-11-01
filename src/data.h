@@ -183,8 +183,8 @@ bt_increment_downloads(redisContext *redis, const bt_config_t *config,
 
 /* Returns whether the given torrent is blacklisted. */
 bool
-bt_info_hash_blacklisted(redisContext *redis, const char *info_hash_str,
-                         const bt_config_t *config);
+bt_info_hash_blacklisted(redisContext *redis, const bt_config_t *config,
+                         const char *info_hash_str);
 
 /*
  * Peer management.

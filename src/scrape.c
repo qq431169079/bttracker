@@ -83,7 +83,7 @@ bt_handle_scrape(const bt_req_t *request, const bt_config_t *config,
     int8_t *info_hash = (int8_t *) scrape_request.info_hash + i * 20;
 
     bt_bytearray_to_hexarray(info_hash, 20, &info_hash_str);
-    if (bt_info_hash_blacklisted(redis, info_hash_str, config)) {
+    if (bt_info_hash_blacklisted(redis, config, info_hash_str)) {
       syslog(LOG_DEBUG, "Blacklisted info hash: %s", info_hash_str);
 
       free(info_hash_str);
