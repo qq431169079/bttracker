@@ -31,6 +31,14 @@
 #ifndef BTTRACKER_ANNOUNCE_H_
 #define BTTRACKER_ANNOUNCE_H_
 
+/* Returns a string representation of the given enum value. */
+char *
+bt_announce_event_str(bt_announce_event event);
+
+/* Logs the announce request data for debugging. */
+void
+bt_log_announce_request(const bt_announce_req_t *req);
+
 /* Returns the response data to a announce request. */
 bt_response_buffer_t *
 bt_handle_announce(const bt_req_t *request, const bt_config_t *config,

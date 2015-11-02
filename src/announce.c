@@ -28,6 +28,27 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+char *
+bt_announce_event_str(bt_announce_event event)
+{
+  switch (event) {
+  case BT_EVENT_NONE:      return "NONE";
+  case BT_EVENT_COMPLETED: return "COMPLETED";
+  case BT_EVENT_STARTED:   return "STARTED";
+  case BT_EVENT_STOPPED:   return "STOPPED";
+  default:                 return "UNKNOWN";
+  }
+}
+
+void
+bt_log_announce_request(const bt_announce_req_t *req)
+{
+  char *event_str = bt_announce_event_str(req->event);
+
+  syslog(LOG_DEBUG, "Handling announce: [%s] D/U/L/W: %" PRId64 "/%" PRId64 "/%" PRId64 "/%" PRId32,
+         event_str, req->downloaded, req->uploaded, req->left, req->num_want);
+}
+
 void
 bt_update_peer_list(redisContext *redis, const bt_config_t *config,
                     bt_announce_req_t *announce_request,
@@ -46,11 +67,17 @@ bt_update_peer_list(redisContext *redis, const bt_config_t *config,
     bt_promote_peer(redis, config, info_hash_str, peer_id);
     break;
 
-  default:
+  case BT_EVENT_NONE:
+  case BT_EVENT_STARTED:
     peer = bt_new_peer(announce_request,
                        (uint32_t) ntohl(client_addr->sin_addr.s_addr));
     bt_insert_peer(redis, config, info_hash_str, peer_id, peer, is_seeder);
     free(peer);
+    break;
+
+  default:
+    syslog(LOG_ERR, "Invalid announce event");
+    break;
   }
 }
 
@@ -103,8 +130,7 @@ bt_handle_announce(const bt_req_t *request, const bt_config_t *config,
   char *info_hash_str;
   bt_bytearray_to_hexarray(announce_request.info_hash, 20, &info_hash_str);
 
-  syslog(LOG_DEBUG, "Handling announce. Event = %" PRId32,
-         announce_request.event);
+  bt_log_announce_request(&announce_request);
 
   /* Checks whether the announced info hash is blacklisted. */
   if (bt_info_hash_blacklisted(redis, config, info_hash_str)) {
