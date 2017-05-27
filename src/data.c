@@ -47,14 +47,20 @@ bt_bytearray_to_hexarray(int8_t *bin, size_t binsz, char **result)
 }
 
 redisContext *
-bt_redis_connect(const char *host, int port, long timeout, int db)
+bt_redis_connect(const char *unix_sock, const char *host, int port,
+                 long timeout, int db)
 {
   redisContext *conn;
   redisReply *reply;
   struct timeval timeout_val = {0, timeout};
 
-  syslog(LOG_DEBUG, "Connecting to Redis instance at %s:%d[%d]", host, port, db);
-  conn = redisConnectWithTimeout(host, port, timeout_val);
+  if (NULL != unix_sock) {
+    syslog(LOG_DEBUG, "Connecting to Redis instance at %s", unix_sock);
+    conn = redisConnectUnixWithTimeout(unix_sock, timeout_val);
+  } else {
+    syslog(LOG_DEBUG, "Connecting to Redis instance at %s:%d[%d]", host, port, db);
+    conn = redisConnectWithTimeout(host, port, timeout_val);
+  }
 
   if (NULL == conn) {
     syslog(LOG_ERR, "Connection error: can't allocate conn context");

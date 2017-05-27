@@ -56,6 +56,7 @@ typedef struct {
   uint16_t announce_max_numwant;
 
   // Redis options
+  char *redis_socket_path;
   char *redis_host;
   uint16_t redis_port;
   uint32_t redis_timeout;

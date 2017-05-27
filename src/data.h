@@ -156,7 +156,8 @@ typedef struct {
 
 /* Connects to the specified redis instance. */
 redisContext *
-bt_redis_connect(const char *host, int port, long timeout, int db);
+bt_redis_connect(const char *unix_sock,  const char *host, int port,
+                 long timeout, int db);
 
 /* Checks whether the Redis connection is still valid. */
 bool

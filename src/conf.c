@@ -98,15 +98,17 @@ bt_load_config(const char *filename, bt_config_t *config)
   free(info_hash_restriction_str);
   free(log_level_str);
 
-  config->redis_host       =
+  config->redis_socket_path =
+    g_key_file_get_string(keyfile,  "Redis", "SocketPath", NULL);
+  config->redis_host        =
     g_key_file_get_string(keyfile,  "Redis", "Host", NULL);
-  config->redis_port       =
+  config->redis_port        =
     g_key_file_get_integer(keyfile, "Redis", "Port", NULL);
-  config->redis_timeout    =
+  config->redis_timeout     =
     g_key_file_get_integer(keyfile, "Redis", "Timeout", NULL);
-  config->redis_db         =
+  config->redis_db          =
     g_key_file_get_integer(keyfile, "Redis", "DB", NULL);
-  config->redis_key_prefix =
+  config->redis_key_prefix  =
     g_key_file_get_string(keyfile,  "Redis", "KeyPrefix", NULL);
 
   g_key_file_free(keyfile);

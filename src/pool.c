@@ -62,8 +62,9 @@ bt_request_processor(void *job_params, void *pool_params)
   /* Connects to the Redis instance where the data should be stored. */
   if (!redis) {
   redis_connect:
-    redis = bt_redis_connect(config->redis_host, config->redis_port,
-                             redis_timeout, config->redis_db);
+    redis = bt_redis_connect(config->redis_socket_path, config->redis_host,
+                             config->redis_port, redis_timeout,
+                             config->redis_db);
 
     /* Cannot connect, answer this request with an error. */
     if (!redis) {
