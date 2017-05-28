@@ -31,11 +31,12 @@
 #include "minunit.h"
 
 void
-write_tmp_config(char *filename) {
+write_tmp_config(char *filename)
+{
   const char *template = "/tmp/bttracker.conf.XXXXXX";
 
-  strcpy (filename, template);
-  int fd = mkstemp (filename);
+  strcpy(filename, template);
+  int fd = mkstemp(filename);
 
   const char *text = "[BtTracker]\n\
 LogLevel=INFO\n\
@@ -60,11 +61,13 @@ Timeout=500\n\
 DB=1\n\
 KeyPrefix=bttracker";
 
-  write (fd, text, strlen (text));
-  close (fd);
+  write(fd, text, strlen(text));
+  close(fd);
 }
 
-char *test_load_config_valid_file() {
+char *
+test_load_config_valid_file()
+{
   bt_config_t config;
 
   char filename[PATH_MAX];
@@ -97,7 +100,9 @@ char *test_load_config_valid_file() {
   return NULL;
 }
 
-char *test_load_config_invalid_file() {
+char *
+test_load_config_invalid_file()
+{
   bt_config_t config;
   const char *filename = "bttracker.conf.invalid";
 
@@ -107,7 +112,9 @@ char *test_load_config_invalid_file() {
   return NULL;
 }
 
-char *all_tests() {
+char *
+all_tests()
+{
   mu_run_test(test_load_config_valid_file);
   mu_run_test(test_load_config_invalid_file);
 
