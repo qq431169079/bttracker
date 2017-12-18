@@ -73,6 +73,12 @@ root directory.
 I don't recommend you to `make install` this package because it is not yet
 complete.
 
+## Donate
+
+If this project is useful for you, buy me a beer!
+
+Bitcoin: `1CLFiuB5oghPjnq8zXFkYgKyFnCTVWEV1r`
+
 ## License
 
 Copyright (C) BtTracker Authors
